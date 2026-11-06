@@ -1,0 +1,19 @@
+name: Pruebas
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  rapidas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Planificador de la semana (Edrei)
+        run: node tools/edrei_semana_test.js
+      - name: Sin rayas largas ni medias
+        run: python3 tools/check_dashes.py

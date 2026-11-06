@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111418">
-<title>Rutina Edrei v13</title>
+<title>Rutina Edrei</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -34,7 +34,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15p
 .wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 h1{font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:1;margin:0;letter-spacing:.01em;text-transform:uppercase}
 .sub{color:var(--muted);margin:4px 0 0;font-size:.92rem}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tabs{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:6px}
 .stick{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px 6px;display:flex;flex-direction:column;gap:6px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .tab{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 4px;cursor:pointer;font-family:var(--display);font-weight:700;font-size:1.05rem;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -157,6 +157,34 @@ button.set{font-family:var(--mono);color:var(--ink);cursor:pointer;min-height:40
 .toast span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .toast button{flex:0 0 auto;font:inherit;font-weight:700;background:transparent;border:1.5px solid currentColor;color:var(--surface);border-radius:8px;padding:5px 10px;cursor:pointer}
 @media (max-width:640px){.dtxt{display:none}.prog{font-size:.78rem;padding-left:10px}.pgp{min-width:27px;font-size:.66rem}.pps{gap:4px}}
+
+/* v14: semana adaptativa */
+.tab small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab.today::after{content:"hoy";position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-family:var(--body);font-size:.58rem;font-weight:700;text-transform:none;background:var(--ink);color:var(--surface);border-radius:999px;padding:0 6px;line-height:14px}
+.week{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.wkrow{display:flex;gap:6px}
+.wk{flex:1 1 0;min-width:0;font:inherit;border:1.5px solid var(--line);background:var(--soft);color:var(--ink);border-radius:10px;padding:5px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;line-height:1.15}
+.wk .wd{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.wk .wn{font-family:var(--display);font-weight:800;font-size:1.15rem}
+.wk .ws{font-size:.62rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.wk.hoy{border-color:var(--ink)}
+.wk[aria-pressed="true"]{outline:2.5px solid var(--plate-text);outline-offset:1px}
+.wk.s-fui{background:color-mix(in srgb,var(--ok) 16%,var(--surface));border-color:var(--ok)} .wk.s-fui .ws{color:var(--ok)}
+.wk.s-no .wn,.wk.s-no .ws{color:var(--muted);text-decoration:line-through}
+.wk.s-supuesto{border-style:dashed;border-color:var(--warn)} .wk.s-supuesto .ws{color:var(--warn)}
+.wk.s-off{opacity:.6}
+.wk:focus-visible,.dact:focus-visible{outline:3px solid var(--plate-text);outline-offset:2px}
+.wkq{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;font-size:.86rem}
+.wkq .row{gap:6px}
+.wkq .btn{min-height:38px}
+.wnote{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+.wnote b{color:var(--ink)}
+.wnote details{margin-top:4px;font-size:.82rem}
+.dayhead .when{font-weight:600;opacity:1}
+.dact{margin-top:10px;font:inherit;font-size:.84rem;font-weight:600;background:transparent;color:var(--plate-ink);border:1.5px solid var(--plate-ink);border-radius:999px;padding:6px 14px;min-height:38px;cursor:pointer}
+.note.planned{margin:0;padding:8px 12px;border:1px dashed var(--line);border-radius:10px;background:var(--surface)}
+button.set:disabled{cursor:default;opacity:.7}
+.toast button[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -173,9 +201,11 @@ button.set{font-family:var(--mono);color:var(--ink);cursor:pointer;min-height:40
 </defs></svg>
 <div class="wrap">
   <header>
-    <h1>Rutina Edrei · v13</h1>
-    <p class="sub">5 días, lunes a viernes · 60 min por sesión · 6 ejercicios en 3 superseries · cada ejercicio en 3D: gíralo con el dedo</p>
+    <h1>Rutina Edrei · v14</h1>
+    <p class="sub">Día 1 a Día 5 · si faltas, la semana se reacomoda sola · 60 min por sesión · 6 ejercicios en 3 superseries · cada ejercicio en 3D</p>
   </header>
+
+  <section class="week" id="week" aria-label="Asistencia de la semana"></section>
 
   <div class="stick"><nav class="tabs" role="tablist" id="tabs"></nav><div class="prog" id="prog" aria-live="polite"></div></div>
 
@@ -183,7 +213,8 @@ button.set{font-family:var(--mono);color:var(--ink);cursor:pointer;min-height:40
   <div class="legend" aria-label="Cómo registrar tu sesión">
     <span><b>Superseries:</b> haz una serie de A y enseguida una de B; descansa al terminar el par. Repite las rondas.</span>
     <span><b>Toca cada serie</b> (S1, S2…) al terminarla. En la serie de B arranca solo el descanso, arriba ves la cuenta.</span>
-    <span><b>✓ Ya lo hice</b> apaga el ejercicio de hoy (también se apaga solo al marcar todas sus series). <b>Reactivar</b> lo devuelve. Se guarda por fecha: cada día empieza limpio.</span>
+    <span><b>✓ Ya lo hice</b> apaga el ejercicio de hoy (también se apaga solo al marcar todas sus series). <b>Reactivar</b> lo devuelve.</span>
+    <span><b>Tu semana:</b> las sesiones son Día 1 a Día 5 y vas haciendo la siguiente. Arriba marcas si fuiste o no; si faltas, lo que queda se reacomoda en los días que te quedan. Cada lunes empieza otra vez en Día 1.</span>
   </div>
   <div class="legend" aria-label="Cómo leer la intensidad">
     <span><span class="pill p-rir2">RIR 2</span> &nbsp;Termina con 2 reps que aún podrías hacer. Básicos con barra: nunca al fallo entrenando solo.</span>
@@ -202,6 +233,7 @@ button.set{font-family:var(--mono);color:var(--ink);cursor:pointer;min-height:40
 </div>
 <div class="toast" id="toast" role="status" hidden><span></span><button type="button">Deshacer</button></div>
 
+<script src="semana.js"></script>
 <script>
 const PLATES={LUNES:["#D62F2F","#FFFFFF","#D62F2F"],MARTES:["#2457C5","#FFFFFF","#3D6FE0"],"MIÉRCOLES":["#E9B500","#15181D","#A87F00"],JUEVES:["#2E8B4E","#FFFFFF","#2E8B4E"],VIERNES:["#D9DCE0","#15181D","#0E97A8"]};
 const PLATE_KG={LUNES:"25 kg",MARTES:"20 kg","MIÉRCOLES":"15 kg",JUEVES:"10 kg",VIERNES:"5 kg"};
@@ -252,7 +284,7 @@ A.jalonSup=A.jalon;
 // Datos de la rutina v13: 6 ejercicios por día en 3 superseries (A y enseguida B, luego descanso).
 // Formato: [nombre, series, reps, descanso (s, solo en B), int (rir2 | rir1 | fallo), ss (1 = A de un par), búsqueda, animación, cómo, evita, lo sientes en, plan B]
 const DAYS=[
- {d:"LUNES",s:"Empuje A",f:"Fuerza: pecho, hombro y tríceps pesados",
+ {d:"LUNES",n:1,fam:"push",s:"Empuje A",f:"Fuerza: pecho, hombro y tríceps pesados",
   where:["Banco plano y mancuernas ligeras","Rack y polea alta cercana","Banco inclinado y mancuernas"],
   warm:["3 min de bicicleta suave","Rotación externa en polea ligera: 1×15 por brazo","Press de banca: barra sola ×10, luego 50 % ×5"],
   extra:"Si vas antes del minuto 48: elevación lateral en polea baja 2×15.",
@@ -264,7 +296,7 @@ const DAYS=[
   ["Press inclinado 30° con mancuerna",3,"8-10",0,"rir1",1,"press inclinado con mancuernas tecnica","inclDb","Banco a 30°. Mancuernas a los lados del pecho, codos un poco por debajo. Sube juntándolas sin chocarlas y baja en 2-3 segundos.","Banco muy vertical: se vuelve press de hombro.","Pecho alto","Sin banco inclinado libre: press plano con mancuerna, codos más pegados."],
   ["Extensión de tríceps sobre la cabeza con mancuerna",3,"10-12",90,"fallo",0,"extension de triceps sobre la cabeza con mancuerna tecnica","overheadDb","De pie junto al mismo banco, una mancuerna sujeta con ambas manos por el disco superior. Codos apuntando al techo y quietos. Baja la mancuerna detrás de la cabeza hasta sentir el estiramiento y extiende.","Abrir los codos o arquear la espalda.","Tríceps (cabeza larga)","Extensión sobre la cabeza con cuerda en polea."]],
   cool:["Pecho en poste o marco de puerta: 30 s por lado","Hombro cruzado al frente: 30 s por lado","Tríceps detrás de la cabeza: 30 s por lado","Abdomen boca abajo, apoyado en antebrazos: 45 s","Respiración lenta sentado: 1 min"]},
- {d:"MARTES",s:"Jale A",f:"Fuerza: espalda pesada, deltoides posterior y bíceps",
+ {d:"MARTES",n:2,fam:"pull",s:"Jale A",f:"Fuerza: espalda pesada, deltoides posterior y bíceps",
   where:["Barra libre y polea cercana","Polea alta del jalón y barra Z","Banco y mancuernas"],
   warm:["3 min de bicicleta o remo ergómetro suave","Jalón al pecho ligero: 1×15","Remo con barra: barra sola ×10, luego 50 % ×5"],
   extra:"Si vas antes del minuto 48: curl predicador con barra Z 2×10-12.",
@@ -276,7 +308,7 @@ const DAYS=[
   ["Aperturas posteriores con mancuerna, sentado",4,"12-15",0,"fallo",1,"aperturas posteriores sentado mancuernas deltoides posterior","postDb","Sentado al borde del banco, torso inclinado sobre los muslos, espalda recta. Abre los brazos a los lados con los codos un poco doblados hasta la altura del hombro. Peso ligero.","Usar mucho peso y jalar con la espalda.","Parte trasera del hombro","Apertura posterior en polea, un brazo."],
   ["Curl martillo con mancuerna",4,"10-12",75,"fallo",0,"curl martillo mancuernas tecnica","martillo","Palmas mirándose todo el recorrido. Codos fijos al costado. Sube y baja controlado.","Girar la muñeca o adelantar los codos.","Bíceps externo, braquial y antebrazo","Curl martillo en polea baja con cuerda."]],
   cool:["Dorsal: agarra un poste y lleva la cadera atrás: 30 s por lado","Bíceps con la palma contra la pared: 30 s por lado","Antebrazo, dedos hacia ti: 30 s por lado","Espalda alta: abrázate y redondea: 45 s","Respiración lenta: 1 min"]},
- {d:"MIÉRCOLES",s:"Pierna",f:"Mantener piernas con básicos; el torso descansa",
+ {d:"MIÉRCOLES",n:3,fam:"legs",s:"Pierna",f:"Mantener piernas con básicos; el torso descansa",
   where:["Rack y un disco en el piso","Prensa y máquina de aductores","Banco con barra y curl femoral"],
   warm:["3 min de bicicleta suave","Bisagra de cadera con barra sola: 1×10","Sentadilla: barra sola ×10, luego 50 % ×5"],
   extra:"Si vas antes del minuto 48: crunch en polea alta 2×12-15.",
@@ -288,7 +320,7 @@ const DAYS=[
   ["Hip thrust con barra en banco",3,"8-10",0,"rir2",1,"hip thrust con barra tecnica","hipThrust","Pon el banco cerca de la máquina de femoral. Espalda alta apoyada en el borde del banco, barra sobre la cadera con almohadilla. Sube la cadera apretando glúteos hasta tronco paralelo al piso. Barbilla metida, pausa 1 s.","Arquear la espalda baja en vez de subir con el glúteo.","Glúteo","Puente de glúteo con barra en el piso, junto a la máquina."],
   ["Curl femoral sentado",3,"12-15",90,"fallo",0,"curl femoral sentado maquina tecnica","femoral","Rodilla alineada con el eje de la máquina, rodillo arriba del tobillo. Jala abajo y atrás, pausa y sube lento.","Despegar la cadera del asiento.","Femoral","Peso muerto rumano con mancuerna, 3×10-12."]],
   cool:["Cuádriceps de pie, talón al glúteo: 30 s por lado","Femoral con el talón sobre el banco: 30 s por lado","Flexor de cadera, rodilla al piso: 30 s por lado","Aductor sentado, plantas juntas: 45 s","Pantorrilla contra la pared: 30 s por lado"]},
- {d:"JUEVES",s:"Empuje B",f:"Volumen: hombro primero, pecho alto y tríceps",
+ {d:"JUEVES",n:4,fam:"push",s:"Empuje B",f:"Volumen: hombro primero, pecho alto y tríceps",
   where:["Banco con respaldo y mancuernas","Banco inclinado con barra y polea alta","Torre de poleas"],
   warm:["3 min de bicicleta suave","Rotación externa en polea ligera: 1×15 por brazo","Press de hombro: 2 series ligeras de 10 y 6"],
   extra:"Si vas antes del minuto 48: press cerrado con barra 2×8-10.",
@@ -300,7 +332,7 @@ const DAYS=[
   ["Elevación lateral en polea baja, un brazo",4,"12-15 c/brazo",0,"fallo",1,"elevacion lateral en polea baja un brazo tecnica","latPolea","Polea en lo más bajo. De lado a la máquina, toma el maneral con la mano más lejana; el cable pasa frente a ti. Sube el brazo hasta la altura del hombro.","Inclinar el torso al otro lado.","Parte lateral del hombro","Elevación lateral con mancuerna."],
   ["Jalón de tríceps en polea alta",4,"10-12",75,"fallo",0,"extension de triceps en polea alta tecnica","triPolea","En la misma torre de poleas, del otro lado. Barra recta o en V. Codos pegados al costado y quietos. Extiende hasta estirar el brazo y aprieta.","Separar los codos o empujar con el cuerpo.","Parte trasera del brazo","Extensión de tríceps tumbado con barra Z."]],
   cool:["Hombro cruzado al frente: 30 s por lado","Pecho en poste o marco de puerta: 30 s por lado","Tríceps detrás de la cabeza: 30 s por lado","Abdomen boca abajo, apoyado en antebrazos: 45 s","Respiración lenta: 1 min"]},
- {d:"VIERNES",s:"Jale B",f:"Volumen: bisagra pesada, espalda, deltoides posterior y bíceps",
+ {d:"VIERNES",n:5,fam:"pull",s:"Jale B",f:"Volumen: bisagra pesada, espalda, deltoides posterior y bíceps",
   where:["Plataforma y polea cercana","Polea alta y mancuernas ligeras","Polea baja de remo y banco inclinado"],
   warm:["3 min de bicicleta o remo ergómetro suave","Bisagra de cadera con barra sola: 1×10","Peso muerto: 40 % ×5, luego 60 % ×3"],
   extra:"Si vas antes del minuto 48: encogimientos con mancuerna 2×12-15.",
@@ -1201,28 +1233,164 @@ function frame(ts){
 // ---------- UI ----------
 const intLabel={rir2:["p-rir2","RIR 2"],rir1:["p-rir1","RIR 1"],fallo:["p-fallo","Última al fallo"]};
 const restTxt=s=>s===0?"sin descanso":(s>=90?`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")} min`:`${s} s`);
-// Registro del día: se guarda por fecha, así que cada día (y cada semana) empieza limpio
-const LS={get(k,d){try{const v=localStorage.getItem("ed13:"+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem("ed13:"+k,JSON.stringify(v));}catch(e){}}};
+// ---------- Semana adaptativa (spec 001): Día 1 a Día 5 que se reacomodan si faltas ----------
+// Registro por fecha en ed13:d:AAAA-MM-DD = {done, sets, att?: "fui"|"no", plan?: [[sesión, ejercicio]...]}.
+// Plan de la semana en ed13:w:<lunes> = {slots, proj: {fecha: [superseries]}, dropped, merged}.
+const LS={get(k,d){try{const v=localStorage.getItem("ed13:"+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem("ed13:"+k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem("ed13:"+k);}catch(e){}}};
 const p2=n=>String(n).padStart(2,"0");
 const ymd=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-function dateOf(i){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+i);return ymd(d);}
-const stOf=i=>LS.get("d:"+dateOf(i),{done:[],sets:{}});
-const saveSt=(i,st)=>LS.set("d:"+dateOf(i),st);
-try{const lim=new Date();lim.setDate(lim.getDate()-21);const cut=ymd(lim);for(let j=localStorage.length-1;j>=0;j--){const k=localStorage.key(j);if(k&&k.startsWith("ed13:d:")&&k.slice(7)<cut) localStorage.removeItem(k);}}catch(e){}
+const DOW=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"], DOWL=["lunes","martes","miércoles","jueves","viernes","sábado","domingo"], MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const noon=()=>{const d=new Date();d.setHours(12,0,0,0);return d;};
+const parseD=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d,12);};
+const dowOf=s=>(parseD(s).getDay()+6)%7;
+const fmtD=s=>`${DOWL[dowOf(s)]} ${parseD(s).getDate()} ${MES[parseD(s).getMonth()]}`;
+function weekDates(){const d=noon();d.setDate(d.getDate()-((d.getDay()+6)%7));return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return ymd(x);});}
+const recOf=date=>LS.get("d:"+date,null);
+const saveRec=(date,r)=>LS.set("d:"+date,r);
+try{const lim=new Date();lim.setDate(lim.getDate()-21);const cut=ymd(lim);for(let j=localStorage.length-1;j>=0;j--){const k=localStorage.key(j);if(k&&(k.startsWith("ed13:d:")||k.startsWith("ed13:w:"))&&k.slice(7)<cut) localStorage.removeItem(k);}}catch(e){}
+
+const PAIRS=Semana.pairsOf(DAYS,blocksOf), PAIR_BY=Object.fromEntries(PAIRS.map(p=>[p.id,p]));
+const pairOfRef=(s,e)=>PAIRS.find(p=>p.s===s&&p.refs.some(r=>r[1]===e));
+const refsOf=ids=>ids.flatMap(id=>PAIR_BY[id].refs);
+const legacyRefs=dw=>dw<5?DAYS[dw].ex.map((_,e)=>[dw,e]):null; // registros de v13: la sesión era la del día de la semana
+const logged=r=>!!r&&((r.done&&r.done.length>0)||Object.values(r.sets||{}).some(a=>a&&a.length));
+function statusOf(date,today){
+  const r=recOf(date), wkd=dowOf(date)<5;
+  if(r&&r.att==="no") return "no";
+  if(r&&(r.att==="fui"||logged(r))&&(r.plan||wkd)) return "fui";
+  if(date<today) return wkd?"supuesto":"off";
+  if(date===today) return "open";
+  return wkd?"open":"off";
+}
+// Arma una sesión (mismo formato que DAYS) a partir de una lista de ejercicios [sesión, ejercicio]
+function sessionOf(refs,W){
+  const ses=[...new Set(refs.map(r=>r[0]))], B=DAYS[ses[0]], ex=refs.map(([s,e])=>DAYS[s].ex[e]);
+  const where=refs.filter(([s,e])=>DAYS[s].ex[e][5]).map(([s,e])=>DAYS[s].where[pairOfRef(s,e).p]);
+  const base={d:B.d,n:B.n,fam:B.fam,ex,where,refs,origin:ses};
+  if(ses.length===1&&refs.length===B.ex.length&&refs.every(([s,e],i)=>e===i)) return Object.assign({},B,base,{merged:false});
+  const names=ses.map(s=>DAYS[s].s), fams=new Set(ses.map(s=>DAYS[s].fam));
+  const title=ses.length===1?B.s:(fams.has("legs")&&fams.size>1?"Cuerpo completo":fams.size>1?"Torso":names.join(" + "));
+  const firstPair=pairOfRef(...refs[0]);
+  const warm=firstPair.p===0?B.warm:[B.warm[0],B.warm[1],`${ex[0][0]}: 2 series ligeras de 10 y 5`];
+  const cool=[...new Set(ses.flatMap(s=>DAYS[s].cool.filter(c=>!/^Respiración/.test(c))))].slice(0,4).concat("Respiración lenta: 1 min");
+  const keys=new Set(ex.map(e=>e[7]));
+  const drop=((W&&W.dropped)||[]).map(id=>PAIR_BY[id]).flatMap(p=>p.refs).map(([s,e])=>DAYS[s].ex[e]).find(e=>!e[5]&&e[4]==="fallo"&&!keys.has(e[7]));
+  const extra=drop?`Si vas antes del minuto 48: ${drop[0].toLowerCase()} 2×${drop[2]} (salió del plan esta semana).`:B.extra;
+  return Object.assign({},B,base,{s:title,f:ses.length>1?`Sesión ajustada: lo más importante de ${names.join(" y ")}`:`Sesión ajustada de ${B.s}`,warm,cool,extra,merged:true});
+}
+let WEEK=null, SEL=null;
+function buildWeek(){
+  const today=ymd(noon()), dates=weekDates(), mon=dates[0], st={};
+  dates.forEach(d=>st[d]=statusOf(d,today));
+  const consumed=new Set(), vol={}, fuiRefs={};
+  dates.forEach(d=>{if(st[d]!=="fui") return; const r=recOf(d), refs=r.plan||legacyRefs(dowOf(d)); fuiRefs[d]=refs;
+    new Set(refs.map(([s,e])=>pairOfRef(s,e)).filter(Boolean)).forEach(p=>{if(!consumed.has(p.id)){consumed.add(p.id);Semana.addVol(vol,p,MUS);}});});
+  const slots=dates.filter(d=>st[d]==="open"), pending=PAIRS.filter(p=>!consumed.has(p.id)).map(p=>p.id);
+  let W=LS.get("w:"+mon,null);
+  const valid=!!W&&(()=>{ // el plan guardado sigue si solo seguiste el plan (R6)
+    if(W.slots.filter(d=>d>=today&&st[d]!=="fui").join()!==slots.join()) return false;
+    const proj=slots.flatMap(d=>W.proj[d]||[]), all=new Set(proj.concat(W.dropped));
+    return all.size===pending.length&&pending.every(id=>all.has(id));})();
+  if(!valid){
+    const r=Semana.plan({pairs:PAIRS,consumed,doneVol:vol,slots:slots.length,MUS}), proj={};
+    r.days.forEach((g,i)=>proj[slots[i]]=g);
+    W={slots,proj,dropped:r.dropped,merged:r.merged||(!!W&&W.merged)};
+    LS.set("w:"+mon,W);
+  }
+  const days=[];
+  dates.forEach(d=>{
+    if(st[d]==="fui") days.push({date:d,kind:"fui",refs:fuiRefs[d]});
+    else if(st[d]==="open"&&W.proj[d]&&W.proj[d].length) days.push({date:d,kind:"plan",refs:refsOf(W.proj[d])});
+  });
+  days.forEach((x,i)=>{x.n=i+1;x.today=x.date===today;x.D=sessionOf(x.refs,W);});
+  WEEK={today,dates,st,days,W,mon,pending};
+  return WEEK;
+}
+const cur=()=>WEEK.days[current];
+const canLog=i=>{const x=WEEK.days[i];return x.kind==="fui"||x.today;};
+function stOf(i){const r=recOf(WEEK.days[i].date)||{};return {done:r.done||[],sets:r.sets||{}};}
+function saveSt(i,st){ // al registrar, la sesión de ese día queda congelada (R3)
+  const x=WEEK.days[i], r=recOf(x.date)||{};
+  r.done=st.done; r.sets=st.sets; if(!r.plan) r.plan=x.refs; if(r.att!=="no") r.att="fui";
+  saveRec(x.date,r);
+  if(x.kind!=="fui"){buildWeek();paintTabs();paintWeek();}
+}
+// Asistencia: "fui", "no" o null (volver a disponible)
+function setAtt(date,val){
+  const prev=recOf(date), r=Object.assign({},prev||{});
+  if(val==="no") r.att="no";
+  else if(val==="fui"){
+    r.att="fui";
+    if(!r.plan){ // le toca lo que estaba planeado ese día o, si no, la siguiente sesión pendiente
+      const pj=WEEK.W.proj[date]&&WEEK.W.proj[date].filter(id=>WEEK.pending.includes(id));
+      if(pj&&pj.length) r.plan=refsOf(pj);
+      else{const s=Math.min(...WEEK.pending.map(id=>PAIR_BY[id].s)); if(!isFinite(s)){toast("Ya están hechas las 5 sesiones de esta semana");return;} r.plan=refsOf(WEEK.pending.filter(id=>PAIR_BY[id].s===s));}
+    }
+  } else { delete r.att; }
+  if(!logged(r)&&!r.att) LS.del("d:"+date); else saveRec(date,r);
+  refresh(date);
+  if(val==="no"){
+    const k=WEEK.days.length, txt=WEEK.W.merged?`Semana reacomodada: ${k} ${k===1?"sesión":"sesiones"}`:"Listo, se recorrió el plan";
+    toast(`${fmtD(date)}: no ${date<WEEK.today?"fuiste":"vas"}. ${txt}`,()=>{if(prev) saveRec(date,prev); else LS.del("d:"+date); refresh(date);});
+  }
+}
+function swapToday(date){
+  const W=WEEK.W, t=WEEK.today, a=W.proj[t]||[], b=W.proj[date]||[];
+  W.proj[t]=b; W.proj[date]=a; LS.set("w:"+WEEK.mon,W); refresh(t);
+  toast("Listo: esta sesión es la de hoy",()=>{W.proj[t]=a;W.proj[date]=b;LS.set("w:"+WEEK.mon,W);refresh(t);});
+}
+function refresh(focusDate){
+  const keep=focusDate||(WEEK.days[current]&&WEEK.days[current].date);
+  buildWeek(); paintTabs(); SEL=focusDate||SEL; paintWeek();
+  if(!WEEK.days.length){document.getElementById("day").innerHTML=`<div class="block"><h3>Semana completa</h3><p class="note" style="margin:0">No quedan sesiones para esta semana. El lunes empieza otra vez en Día 1.</p></div>`;paintProg();return;}
+  let i=WEEK.days.findIndex(x=>x.date===keep); if(i<0) i=startIndex();
+  render(i);
+}
+function startIndex(){
+  let i=WEEK.days.findIndex(x=>x.today); if(i<0) i=WEEK.days.findIndex(x=>x.date>WEEK.today); if(i<0) i=WEEK.days.length-1;
+  return Math.max(0,i);
+}
 let current=0, timer=null, toastT=null;
 const $=s=>document.querySelector(s);
 function tagsOf(D){const t={};blocksOf(D).forEach((bk,j)=>bk.idx.forEach((n,p)=>t[n]=`${j+1}${bk.idx.length>1?"AB"[p]:""}`));return t;}
+function paintTabs(){
+  const tabs=document.getElementById("tabs"); tabs.style.setProperty("--n",Math.max(WEEK.days.length,1));
+  tabs.innerHTML=WEEK.days.map((x,i)=>{const [pc]=PLATES[x.D.d];return `<button class="tab${x.today?" today":""}" type="button" role="tab" id="tab-${i}" data-tab="${i}" aria-selected="${i===current}"><span class="dot" style="background:${pc}"></span>Día ${x.n}<small>${x.D.s}</small><span class="tck" aria-hidden="true">✓</span></button>`;}).join("");
+}
+// Tira de la semana: aquí le dices a la app si fuiste o no
+function paintWeek(){
+  const W=WEEK.W, dayN={}; WEEK.days.forEach(x=>dayN[x.date]=x.n);
+  const shown=WEEK.dates.filter(d=>dowOf(d)<5||d===WEEK.today||WEEK.st[d]==="fui");
+  const sup=shown.filter(d=>WEEK.st[d]==="supuesto");
+  if(!SEL||!shown.includes(SEL)) SEL=sup[0]||WEEK.today;
+  const lab=d=>{const s=WEEK.st[d];return s==="fui"?`✓ Día ${dayN[d]}`:s==="no"?"No fui":s==="supuesto"?"¿Fuiste?":s==="open"?(dayN[d]?`Día ${dayN[d]}`:"Libre"):"";};
+  const chips=shown.map(d=>`<button type="button" class="wk s-${WEEK.st[d]}${d===WEEK.today?" hoy":""}" data-wd="${d}" aria-pressed="${d===SEL}" aria-label="${fmtD(d)}: ${lab(d)}"><span class="wd">${d===WEEK.today?"Hoy":DOW[dowOf(d)]}</span><span class="wn">${parseD(d).getDate()}</span><span class="ws">${lab(d)}</span></button>`).join("");
+  const s=WEEK.st[SEL], past=SEL<WEEK.today, isT=SEL===WEEK.today, nm=isT?"Hoy":fmtD(SEL).replace(/^./,c=>c.toUpperCase());
+  let q="", btns="";
+  if(s==="supuesto"){q=`${nm}: no registraste nada, supuse que no fuiste.`;btns=`<button class="btn" data-att="fui" data-date="${SEL}">Sí fui</button><button class="btn" data-att="no" data-date="${SEL}">No fui</button>`;}
+  else if(s==="fui"){q=`${nm}: fuiste (Día ${dayN[SEL]}).`;btns=logged(recOf(SEL))?"":`<button class="btn" data-att="no" data-date="${SEL}">En realidad no fui</button>`;}
+  else if(s==="no"){q=`${nm}: ${past?"no fuiste":isT?"hoy no vas":"no podrás ir"}.`;btns=`<button class="btn" data-att="${past?"fui":"open"}" data-date="${SEL}">${past?"Sí fui":isT?"Sí voy hoy":"Sí podré ir"}</button>`;}
+  else if(s==="open"){q=dayN[SEL]?`${nm} toca Día ${dayN[SEL]}: ${WEEK.days.find(x=>x.date===SEL).D.s}.`:`${nm}: libre, ya no queda sesión para este día.`;btns=`<button class="btn" data-att="no" data-date="${SEL}">${isT?"Hoy no puedo ir":"No podré ir"}</button>`;}
+  else {q=`${nm}: descanso.`;}
+  const left=WEEK.days.filter(x=>x.kind==="plan").length, out=W.dropped.map(id=>PAIR_BY[id]).flatMap(p=>p.refs).map(([a,b])=>DAYS[a].ex[b][0]);
+  const note=W.merged?`<div class="wnote"><b>Semana reacomodada.</b> ${left?`Quedan ${left} ${left===1?"sesión":"sesiones"} para los días que tienes; junté las superseries que más aportan.`:"Ya no quedan días con sesión."}${out.length?` Esta semana ${out.length===1?"sale 1 ejercicio":`salen ${out.length} ejercicios`}.`:""}
+    <details><summary>${out.length?"Qué salió y cómo decide":"¿Cómo decide?"}</summary>${out.length?`<p><b>Salió esta semana:</b> ${out.join(", ")}.</p>`:""}<p>Cuenta cuántas series lleva cada músculo en la semana (principal 1, secundario 0.5) y elige las superseries que más suman por minuto, con rendimientos decrecientes: más series dan más músculo, pero cada serie extra rinde menos (Schoenfeld 2017; Pelland 2024). Con el mismo volumen, entrenar más o menos veces por semana cambia poco (Schoenfeld 2019), por eso juntar sesiones casi no pierde estímulo. Hombro, espalda y brazos pesan más porque son tu prioridad; la pierna pesa un poco menos porque mantener pide cerca de un tercio del volumen (Spiering 2021), pero la sentadilla nunca sale. Respeta tus reglas: 60 min, máximo un remo por día, sin sentadilla y peso muerto juntos, y las superseries completas para no cambiar de estación.</p></details></div>`:"";
+  document.getElementById("week").innerHTML=`<div class="wkrow" role="group" aria-label="Tu semana">${chips}</div><div class="wkq"><span>${q}</span><span class="row">${btns}</span></div>${note}`;
+}
 function render(i){
   current=i;
-  const D=DAYS[i], [pc,pi,pt]=PLATES[D.d], st=stOf(i), done=new Set(st.done), TG=tagsOf(D);
+  const X=WEEK.days[i], D=X.D, [pc,pi,pt]=PLATES[D.d], st=stOf(i), done=new Set(st.done), TG=tagsOf(D), log=canLog(i);
   document.documentElement.style.setProperty("--plate",pc);
   document.documentElement.style.setProperty("--plate-ink",pi);document.documentElement.style.setProperty("--plate-text",pt);
   document.querySelectorAll(".tab").forEach((t,j)=>t.setAttribute("aria-selected",j===i));
   const series=D.ex.reduce((a,e)=>a+e[1],0), BL=blocksOf(D), w=Math.round(BL[BL.length-1].end-6);
+  const when=X.kind==="fui"?(X.today?`Hoy, ${fmtD(X.date)} · registrado`:`Hecho el ${fmtD(X.date)}`):(X.today?`Hoy, ${fmtD(X.date)}`:`Plan: ${fmtD(X.date)}`);
+  const act=X.kind==="plan"&&X.today?`<button type="button" class="dact" data-att="no" data-date="${X.date}">Hoy no puedo ir</button>`:(X.kind==="plan"&&WEEK.st[WEEK.today]==="open"?`<button type="button" class="dact" data-swap="${X.date}">Hacerla hoy</button>`:"");
   let h=`<section style="display:flex;flex-direction:column;gap:14px">
-  <div class="dayhead"><div><h2>${D.d} · ${D.s}</h2><p>${D.f}</p><p style="font-family:var(--mono);font-size:.78rem">${series} series · ${D.ex.length} ejercicios en ${BL.length} superseries</p></div>
+  <div class="dayhead"><div><h2>Día ${X.n} · ${D.s}</h2><p class="when">${when}</p><p>${D.f}</p><p style="font-family:var(--mono);font-size:.78rem">${series} series · ${D.ex.length} ejercicios en ${BL.length} superseries</p>${act}</div>
    <div class="timebar"><div class="bar"><span style="width:${6/60*100}%;background:${pi};opacity:.5"></span><span style="width:${w/60*100}%;background:${pi}"></span><span style="width:${(53-6-w)/60*100}%;background:transparent;outline:1px dashed ${pi};outline-offset:-1px"></span><span style="width:${7/60*100}%;background:${pi};opacity:.3"></span></div>
    <div class="lbl"><span>6 calent.</span><span>~${w} trabajo</span><span>${53-6-w} margen + 7 estir.</span></div></div></div>
+  ${log?"":`<p class="note planned">Es el plan de ese día: las series se registran el día que entrenas.${act?" Si quieres hacerla hoy, toca <b>Hacerla hoy</b>.":""}</p>`}
   <div class="block"><h3>Calentamiento · 6 min</h3><ul>${D.warm.map(x=>`<li>${x}</li>`).join("")}</ul></div>`;
   BL.forEach((bk,j)=>{
     const tg=bk.idx.map(n=>TG[n]), R=Math.max(...bk.idx.map(n=>D.ex[n][1])), rest=D.ex[bk.idx[bk.idx.length-1]][3];
@@ -1232,15 +1400,15 @@ function render(i){
     bk.idx.forEach((n,p)=>{
       const [name,s,reps,rst,int,ss,q,anim,como,evita,siente,alt]=D.ex[n], tag=TG[n], [pc2,pl]=intLabel[int], on=new Set((st.sets[n])||[]);
       const cfg=A[anim];
-      const chips=Array.from({length:s},(_,k)=>{const last=k===s-1&&int==="fallo";return `<button type="button" class="set${last?" f":""}" data-n="${n}" data-k="${k}" aria-pressed="${on.has(k)}">S${k+1} · ${last?reps+" al fallo":reps}</button>`}).join("");
+      const chips=Array.from({length:s},(_,k)=>{const last=k===s-1&&int==="fallo";return `<button type="button" class="set${last?" f":""}" data-n="${n}" data-k="${k}" aria-pressed="${on.has(k)}"${log?"":" disabled"}>S${k+1} · ${last?reps+" al fallo":reps}</button>`}).join("");
       h+=`<article class="card${done.has(n)?" done":""}" id="ex-${n}" data-n="${n}">
-       <div class="donerow"><span class="dck" aria-hidden="true">✓</span><span class="dtag">${tag}</span><span class="dname">${name}</span><span class="dtxt">Hecho hoy</span><button type="button" class="undo" data-undo="${n}" aria-label="Reactivar ${name}">Reactivar</button></div>
+       <div class="donerow"><span class="dck" aria-hidden="true">✓</span><span class="dtag">${tag}</span><span class="dname">${name}</span><span class="dtxt">Hecho</span><button type="button" class="undo" data-undo="${n}" aria-label="Reactivar ${name}">Reactivar</button></div>
        <div class="anim">${HAS3D?`<div class="stage3"><canvas width="560" height="560" aria-label="Modelo 3D: ${name}. Desliza a los lados para girar."></canvas></div><div class="ctl"><button type="button" class="mini" data-v="90">Frente</button><button type="button" class="mini" data-v="0">Lado</button><button type="button" class="mini" data-v="-90">Atrás</button><button type="button" class="mini" data-v="top">Arriba</button><button type="button" class="mini hudb" aria-pressed="true">Datos</button><button type="button" class="mini pp" aria-label="Pausar">❚❚</button></div><div class="hud" aria-live="off"></div>`:`<button type="button" class="stage" aria-label="Pausar o reanudar la animación de ${name}" id="st-${i}-${n}"><span class="views">${viewsFor(anim,cfg).map(([y,lab])=>`<span class="view"><svg viewBox="0 -30 200 212" role="img" aria-label="${name}, vista ${lab}"><g data-yaw="${y}"></g></svg><span class="vlab">${lab}</span></span>`).join("")}</span><span class="pz">Pausa</span></button>`}
          <div class="phase"><span class="phtxt">Fuerza · 1 s</span><span class="pbar"><i></i></span></div>
          <div class="mus">${(MUS[anim]||[]).map(m=>`<span>${MUS_NAME[m]}</span>`).join("")}</div>
          <span class="cap" data-anim="${anim}">${HAS3D?(matchMedia("(pointer:coarse)").matches?"Desliza a los lados para girar · dos dedos: acercar y subir la cámara · doble toque: vista inicial":"Arrastra para girar · rueda para acercar · doble clic: vista inicial"):"Toca para pausar"}</span></div>
        <div class="info">
-        <div class="top"><span class="num">${tag}</span><div class="name">${name}</div><button type="button" class="donebtn" data-done="${n}" aria-label="Marcar ${name} como hecho hoy">✓ Ya lo hice</button></div>
+        <div class="top"><span class="num">${tag}</span><div class="name">${name}</div>${log?`<button type="button" class="donebtn" data-done="${n}" aria-label="Marcar ${name} como hecho">✓ Ya lo hice</button>`:""}</div>
         <div class="rx">${s} × ${reps}<small>series × reps</small></div>
         <div class="sets" role="group" aria-label="Series de ${name}: toca cada una al terminarla">${chips}</div>
         <div class="meta"><span class="pill ${pc2}">${pl}</span><span class="note">${rst>0?`Al terminar el par: descansa ${restTxt(rst)}`:`Sin descanso: pasa a ${TG[bk.idx[p+1]]}`}</span></div>
@@ -1269,39 +1437,43 @@ function render(i){
     else{const btn=box.querySelector(".stage");btn.onclick=()=>{it.paused=!it.paused;btn.classList.toggle("off",it.paused);};btn.classList.toggle("off",it.paused);}
     paint(it,true);return it;});
   paintProg();
-  try{localStorage.setItem("dia",i)}catch(e){}
 }
 // barra de avance del día y palomitas en las pestañas
 function paintProg(){
-  const D=DAYS[current], st=stOf(current), done=new Set(st.done), TG=tagsOf(D), c=done.size, all=c===D.ex.length, el=$("#prog");
+  const el=$("#prog"); if(!WEEK.days.length){el.innerHTML=`<span class="pt">Semana completa</span>`;return;}
+  const X=cur(), D=X.D, st=stOf(current), done=new Set(st.done), TG=tagsOf(D), c=done.size, all=c===D.ex.length;
   const pills=blocksOf(D).map(bk=>`<span class="ppg">${bk.idx.map(n=>`<button type="button" class="pgp${done.has(n)?" on":""}" data-go="${n}" aria-label="${D.ex[n][0]}${done.has(n)?": hecho":": pendiente"}">${TG[n]}</button>`).join("")}</span>`).join("");
-  el.innerHTML=`<span class="pt"></span><span class="pps">${pills}</span>`; el._msg=all?"✓ Día completo":`Hoy: <b>${c} de ${D.ex.length}</b> hechos`; paintRest();
+  el.innerHTML=`<span class="pt"></span><span class="pps">${pills}</span>`;
+  el._msg=all?"✓ Día completo":(canLog(current)?`Día ${X.n}: <b>${c} de ${D.ex.length}</b> hechos`:`Día ${X.n} · ${DOW[dowOf(X.date)]} ${parseD(X.date).getDate()}`); paintRest();
   el.classList.toggle("all",all);
-  document.querySelectorAll(".tab").forEach((t,j)=>{const ok=stOf(j).done.length===DAYS[j].ex.length;t.classList.toggle("ok",ok);});
+  document.querySelectorAll(".tab").forEach((t,j)=>{const x=WEEK.days[j];t.classList.toggle("ok",!!x&&x.kind==="fui"&&stOf(j).done.length===x.D.ex.length);});
 }
 function setDone(n,on){
-  const st=stOf(current), d=new Set(st.done), was=d.has(n);
-  if(on){d.add(n); st.sets[n]=Array.from({length:DAYS[current].ex[n][1]},(_,k)=>k);} else d.delete(n);
+  if(!canLog(current)) return;
+  const st=stOf(current), d=new Set(st.done), was=d.has(n), D=cur().D;
+  if(on){d.add(n); st.sets[n]=Array.from({length:D.ex[n][1]},(_,k)=>k);} else d.delete(n);
   st.done=[...d]; saveSt(current,st);
   const card=document.getElementById("ex-"+n); if(card){card.classList.toggle("done",on); card.querySelectorAll(".set").forEach(b=>b.setAttribute("aria-pressed",String((st.sets[n]||[]).includes(+b.dataset.k))));}
   paintProg();
-  if(on&&!was){const D=DAYS[current]; toast(`✓ ${D.ex[n][0]}: hecho`,()=>setDone(n,false));
+  if(on&&!was){toast(`✓ ${D.ex[n][0]}: hecho`,()=>setDone(n,false));
     if(d.size===D.ex.length){const c=document.getElementById("cool"); c&&setTimeout(()=>c.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"}),350);}}
 }
 function toggleSet(n,k,btn){
-  const st=stOf(current), s=new Set(st.sets[n]||[]), on=!s.has(k);
+  if(!canLog(current)) return;
+  const st=stOf(current), s=new Set(st.sets[n]||[]), on=!s.has(k), D=cur().D;
   on?s.add(k):s.delete(k); st.sets[n]=[...s].sort(); saveSt(current,st); btn.setAttribute("aria-pressed",String(on));
-  const e=DAYS[current].ex[n];
-  const BL=blocksOf(DAYS[current]), lastPair=BL[BL.length-1].idx.includes(n);
+  const e=D.ex[n];
+  const BL=blocksOf(D), lastPair=BL[BL.length-1].idx.includes(n);
   if(on&&e[3]>0&&!(lastPair&&s.size===e[1])){const rb=document.getElementById(`rest-${current}-${n}`); if(rb) startRest(rb);} // serie del B: arranca el descanso solo
   if(on&&s.size===e[1]) setTimeout(()=>{const c=new Set(stOf(current).sets[n]||[]); if(c.size===e[1]) setDone(n,true);},450);
+  paintProg();
 }
 function toast(msg,undo){
   const t=$("#toast"); t.querySelector("span").textContent=msg; t.hidden=false;
-  const b=t.querySelector("button"); b.onclick=()=>{t.hidden=true; clearTimeout(toastT); undo&&undo();};
+  const b=t.querySelector("button"); b.hidden=!undo; b.onclick=()=>{t.hidden=true; clearTimeout(toastT); undo&&undo();};
   clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;},5000);
 }
-window.enable3D=()=>{try{const c=document.createElement("canvas");if(!(c.getContext("webgl2")||c.getContext("webgl")))return;}catch(e){return;}HAS3D=true;render(current);};
+window.enable3D=()=>{try{const c=document.createElement("canvas");if(!(c.getContext("webgl2")||c.getContext("webgl")))return;}catch(e){return;}HAS3D=true;if(WEEK.days.length) render(current);};
 function paintRest(){const el=$("#prog"), pt=el&&el.querySelector(".pt"); if(!pt) return;
   if(timer&&timer.left>0){pt.innerHTML=`<button type="button" class="rstop" data-stop="1" aria-label="Terminar descanso">⏱ Descansa <b>${Math.floor(timer.left/60)}:${p2(timer.left%60)}</b></button>`; el.classList.add("resting");}
   else if(timer&&timer.left<=0){pt.innerHTML="<b>¡Siguiente ronda!</b>"; el.classList.add("resting");}
@@ -1323,17 +1495,19 @@ document.addEventListener("click",ev=>{
   const dn=t.closest("[data-done]"); if(dn){setDone(+dn.dataset.done,true);return;}
   const un=t.closest("[data-undo]"); if(un){setDone(+un.dataset.undo,false);return;}
   if(t.closest("[data-stop]")){stopRest();return;}
+  const tb=t.closest("[data-tab]"); if(tb){stopRest();render(+tb.dataset.tab);window.scrollTo({top:0});return;}
+  const wd=t.closest("[data-wd]"); if(wd){SEL=wd.dataset.wd;paintWeek();const i=WEEK.days.findIndex(x=>x.date===SEL);if(i>=0&&i!==current) render(i);return;}
+  const at=t.closest("[data-att]"); if(at){setAtt(at.dataset.date,at.dataset.att==="open"?null:at.dataset.att);return;}
+  const sw=t.closest("[data-swap]"); if(sw){swapToday(sw.dataset.swap);return;}
   const go=t.closest("[data-go]"); if(go){const c=document.getElementById("ex-"+go.dataset.go); c&&c.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});return;}
   const b=t.closest("[data-rest]"); if(!b) return;
   if(timer&&timer.b===b){stopRest();return;}
   startRest(b);
 });
-const tabs=document.getElementById("tabs");
-DAYS.forEach((D,i)=>{const [pc]=PLATES[D.d];const t=document.createElement("button");t.className="tab";t.type="button";t.setAttribute("role","tab");t.id="tab-"+i;
-  t.innerHTML=`<span class="dot" style="background:${pc}"></span>${D.d.slice(0,3)}<small>${D.s}</small><span class="tck" aria-hidden="true">✓</span>`;t.onclick=()=>{render(i);window.scrollTo({top:0});};tabs.appendChild(t);});
-let start=(new Date().getDay()+6)%7; if(start>4) start=0;
-try{const s=localStorage.getItem("dia"); if(s!==null&&new Date().getDay()%6===0) start=+s;}catch(e){}
-render(start);
+buildWeek(); current=startIndex(); paintTabs(); paintWeek();
+if(WEEK.days.length) render(current); else refresh();
+// si la app queda abierta y cambia el día (medianoche), se vuelve a armar la semana
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&WEEK.today!==ymd(noon())){SEL=null;refresh();}});
 requestAnimationFrame(frame);
 if(matchMedia("(min-width:700px)").matches) document.getElementById("howto").open=true;
 document.getElementById("spd").onclick=e=>{speed=speed===1?.5:1;e.currentTarget.textContent=speed===1?"Velocidad: normal":"Velocidad: lenta (½)";e.currentTarget.setAttribute("aria-pressed",speed!==1);};
