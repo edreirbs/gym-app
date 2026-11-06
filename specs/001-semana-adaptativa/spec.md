@@ -26,7 +26,7 @@ Las sesiones se llaman **Día 1 a Día 5** y son una cola: cada vez que va al gi
 - R2. Un día cuenta como "fui" si lo marqué así o si registré alguna serie o ejercicio. Un día pasado sin registro se supone "no fui" (y se puede corregir).
 - R3. Lo hecho no cambia: la sesión de un día "fui" queda congelada (se guarda en su registro). Hoy se congela al registrar la primera serie.
 - R4. Si las sesiones pendientes caben en los días disponibles, se hacen tal cual, en orden.
-- R5. Si no caben: con D días disponibles, se arman D sesiones con las superseries pendientes más valiosas (máximo 3 por día, 6 ejercicios).
+- R5. Si no caben: se juntan sesiones por tipo de día. **Reemplazada por la spec 002** (la primera versión repartía superseries libremente y era difícil de entender).
 - R6. El plan es estable: si sigo el plan, no se recalcula. Solo cambia cuando cambia la asistencia (falté, marco un día, cambia la disponibilidad).
 - R7. La app explica el ajuste: cuántas sesiones en cuántos días, qué superseries se juntaron y qué ejercicios quedaron fuera esta semana.
 

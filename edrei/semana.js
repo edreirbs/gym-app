@@ -1,4 +1,4 @@
-/* Semana adaptativa (spec: specs/001-semana-adaptativa/spec.md).
+/* Semana adaptativa (specs 001 y 002 en specs/).
    Funciones puras: no tocan el DOM ni localStorage. Las usa rutina.html y las pruebas.
    Unidad de trabajo: la superserie (par A y B) tal como la arma blocksOf. */
 (function(root){
@@ -44,79 +44,83 @@ function okGroup(g){
   return g.length<=PER_DAY;
 }
 const ordKey=p=>p.s*10+p.p;
-// Dentro del día: básicos con barra primero. Si todo viene de una sola sesión, se respeta su orden original.
+// Dentro del día: si todo viene de una sesión, su orden original; si no, básicos con barra (RIR 2) primero.
 function orderGroup(g){
   if(new Set(g.map(p=>p.s)).size===1) return g.slice().sort((a,b)=>a.p-b.p);
   return g.slice().sort((a,b)=>(RANK[a.ints[0]]??2)-(RANK[b.ints[0]]??2)||ordKey(a)-ordKey(b));
 }
-function orderDays(groups){return groups.map(orderGroup).sort((a,b)=>Math.min(...a.map(ordKey))-Math.min(...b.map(ordKey)));}
 
-function score(days){
-  let sc=0;
-  for(const g of days){
-    for(let i=0;i<g.length;i++) for(let j=i+1;j<g.length;j++){
-      if(g[i].s===g[j].s) sc+=3; else if(g[i].fam===g[j].fam) sc+=1;
-    }
-  }
-  const sizes=days.map(g=>g.length), avg=sizes.reduce((a,b)=>a+b,0)/sizes.length;
-  sc-=sizes.reduce((a,b)=>a+(b-avg)**2,0);
-  for(let i=1;i<days.length;i++){
-    const hl=g=>g.some(p=>p.keys.some(k=>HEAVY_LOW.has(k)));
-    if(hl(days[i-1])&&hl(days[i])) sc-=4; // dos días seguidos con básico pesado de pierna
-  }
-  return sc;
+/** Sesiones pendientes: las que no se han tocado esta semana. Si ya hiciste una superserie de una sesión, esa sesión cuenta como hecha. */
+function pendingSessions(pairs,consumed){
+  const touched=new Set(pairs.filter(p=>consumed.has(p.id)).map(p=>p.s));
+  return [...new Set(pairs.map(p=>p.s))].filter(s=>!touched.has(s));
+}
+function pendingIds(pairs,consumed){const ps=new Set(pendingSessions(pairs,consumed));return pairs.filter(p=>ps.has(p.s)).map(p=>p.id);}
+
+/* Lugares de un día juntado: cada superserie conserva su papel (1 básico pesado, 2 compuesto, 3 analítico).
+   Mismo tipo: en cada lugar compiten la superserie 1 de A contra la 1 de B, etc.
+   Torso: 1 empuje pesado, 2 jale (remo o jalón, sin peso muerto), 3 analítico de cualquiera.
+   Cuerpo completo: 1 sentadilla, 2 un básico de torso, 3 analítico de torso (si cabe en el tiempo). */
+function slotsOf(u,cand){
+  const of=(fam,ps)=>cand.filter(p=>p.fam===fam&&ps.includes(p.p));
+  const noHL=l=>l.filter(p=>!p.keys.some(k=>HEAVY_LOW.has(k)));
+  const fams=new Set(cand.map(p=>p.fam));
+  if(fams.size===1) return [0,1,2].map(k=>cand.filter(p=>p.p===k));
+  const up=[...fams].filter(f=>f!=="legs");
+  const heavyUp=noHL(of("push",[0]).concat(of("pull",[0,1])));
+  const light=up.flatMap(f=>of(f,[2]));
+  if(fams.has("legs")) return [of("legs",[0]),heavyUp,light];
+  return [of("push",[0]),noHL(of("pull",[0,1])),light];
 }
 
-/** Busca la mejor forma de repartir `sel` en exactamente k días válidos. firstOnly: solo dice si existe. */
-function partition(sel,k,firstOnly){
-  k=Math.min(k,sel.length);
-  let best=null,bestS=-Infinity; const G=[];
-  const rec=i=>{
-    if(firstOnly&&best) return;
-    if(sel.length-i<k-G.length) return;
-    if(i===sel.length){
-      if(G.length!==k) return;
-      const days=orderDays(G), s=score(days);
-      if(s>bestS){bestS=s;best=days;}
-      return;
-    }
-    const p=sel[i];
-    for(const g of G){ if(g.length<PER_DAY){ g.push(p); if(okGroup(g)) rec(i+1); g.pop(); if(firstOnly&&best) return; } }
-    if(G.length<k){ G.push([p]); if(okGroup(G[G.length-1])) rec(i+1); G.pop(); }
-  };
-  rec(0);
-  return best;
+const FAM_NAME={push:"Empuje",pull:"Jale",legs:"Pierna"};
+function unitTitle(u,pairs){
+  if(u.ses.length===1) return null;
+  const fams=new Set(u.ses.map(s=>pairs.find(p=>p.s===s).fam));
+  if(fams.size===1) return FAM_NAME[[...fams][0]];
+  return fams.has("legs")?"Cuerpo completo":"Torso";
 }
 
 /**
- * Plan de los días que quedan.
- * pairs: de pairsOf. consumed: Set de ids ya hechos esta semana. doneVol: volumen hecho por músculo.
- * slots: número de días disponibles. MUS: músculos por ejercicio.
- * Devuelve {days: [[id...]...], dropped: [id...], merged: bool}.
+ * Plan de los días que quedan, por niveles (spec 002). Se juntan sesiones solo si no alcanzan los días:
+ *   1. Jale A + Jale B en un día de Jale (si pierdes una, que sea Jale B).
+ *   2. Empuje A + Empuje B en un día de Empuje.
+ *   3. Empuje + Jale en un día de Torso. La pierna se queda sola.
+ *   4. Si solo queda un día: Cuerpo completo (sentadilla + lo más valioso de torso).
+ * Un día juntado lleva las 3 superseries que más aportan por minuto, sin romper las reglas.
+ * Devuelve {days: [[id...]...], dropped: [id...], merged: bool, merges: [{ses:[s...], title}]}.
  */
 function plan({pairs,consumed,doneVol,slots,MUS}){
-  const pending=pairs.filter(p=>!consumed.has(p.id));
-  if(!pending.length||slots<=0) return {days:[],dropped:pending.map(p=>p.id),merged:false};
-  const ses=[...new Set(pending.map(p=>p.s))];
-  const whole=ses.every(s=>pairs.filter(p=>p.s===s).every(p=>!consumed.has(p.id)));
-  if(whole&&ses.length<=slots)
-    return {days:ses.map(s=>pending.filter(p=>p.s===s).map(p=>p.id)),dropped:[],merged:false};
-
-  const k=Math.min(slots,Math.ceil(pending.length/PER_DAY)), need=Math.min(pending.length,PER_DAY*k);
-  const vol=Object.assign({},doneVol), sel=[];
-  const take=p=>{sel.push(p);addVol(vol,p,MUS);};
-  pending.filter(p=>MANDATORY.has(p.keys[0])).forEach(take);
-  while(sel.length<need){
-    const cand=pending.filter(p=>!sel.includes(p))
-      .map(p=>({p,g:gain(vol,p,MUS)/p.min}))
-      .sort((a,b)=>b.g-a.g||ordKey(a.p)-ordKey(b.p));
-    const next=cand.find(c=>partition(sel.concat(c.p),Math.min(k,sel.length+1),true));
-    if(!next) break;
-    take(next.p);
+  const pend=pendingSessions(pairs,consumed), ids=pendingIds(pairs,consumed);
+  if(!pend.length||slots<=0) return {days:[],dropped:ids,merged:false,merges:[]};
+  const famOf=s=>pairs.find(p=>p.s===s).fam;
+  let units=pend.map(s=>({ses:[s],fam:famOf(s)}));
+  const join=(a,b,fam)=>{const u={ses:a.ses.concat(b.ses).sort((x,y)=>x-y),fam};units=units.filter(x=>x!==a&&x!==b);units.push(u);units.sort((x,y)=>x.ses[0]-y.ses[0]);};
+  while(units.length>slots){
+    const same=["pull","push"].map(f=>units.filter(u=>u.fam===f)).find(l=>l.length>=2);
+    if(same){join(same[0],same[1],same[0].fam);continue;}
+    const pu=units.find(u=>u.fam==="push"), pl=units.find(u=>u.fam==="pull");
+    if(pu&&pl){join(pu,pl,"upper");continue;}
+    const up=units.filter(u=>u.fam!=="legs");
+    const lg=units.find(u=>u.fam==="legs");
+    if(lg&&up.length){join(lg,up[0],"full");continue;}
+    join(units[0],units[1],units[0].fam); // no debería pasar con la rutina actual
   }
-  const days=partition(sel,k,false)||[];
-  const used=new Set(days.flat().map(p=>p.id));
-  return {days:days.map(g=>g.map(p=>p.id)),dropped:pending.filter(p=>!used.has(p.id)).map(p=>p.id),merged:true};
+  const vol=Object.assign({},doneVol), days=[], merges=[];
+  for(const u of units){
+    const cand=pairs.filter(p=>u.ses.includes(p.s));
+    if(u.ses.length===1){days.push(cand.map(p=>p.id));cand.forEach(p=>addVol(vol,p,MUS));continue;}
+    const sel=[]; const take=p=>{sel.push(p);addVol(vol,p,MUS);};
+    for(const opts of slotsOf(u,cand)){ // en cada lugar, de las opciones queda la que más aporta por minuto
+      const next=opts.filter(p=>okGroup(sel.concat(p))).map(p=>({p,g:gain(vol,p,MUS)/p.min}))
+        .sort((a,b)=>b.g-a.g||ordKey(a.p)-ordKey(b.p))[0];
+      if(next) take(next.p);
+    }
+    days.push(sel.map(p=>p.id));
+    merges.push({ses:u.ses,title:unitTitle(u,pairs)});
+  }
+  const used=new Set(days.flat());
+  return {days,dropped:ids.filter(id=>!used.has(id)),merged:merges.length>0,merges};
 }
 
 /** Revisa un día ya armado contra las reglas (para pruebas y para avisar si algo raro pasa). */
@@ -130,6 +134,6 @@ function check(group){
   return out;
 }
 
-const api={pairsOf,plan,check,addVol,W,MAX_END};
+const api={pairsOf,plan,check,addVol,pendingIds,W,MAX_END};
 if(typeof module!=="undefined"&&module.exports) module.exports=api; else root.Semana=api;
 })(typeof window!=="undefined"?window:globalThis);
