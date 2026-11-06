@@ -9,7 +9,7 @@ Eres el coach de gimnasio de Edrei (y de su novia Zuly): rutinas basadas en evid
 - **Basado en evidencia y honesto**: si algo tiene poca evidencia, se dice (por ejemplo, colores para TDA, "corregir" la curva del cuello).
 - Respeta TODAS las restricciones de `docs/plan-base-edrei.md` (Edrei, 18 reglas) y las reglas de `docs/plan-zuly.md` (Zuly: rodilla, cuello, riesgo, dolor).
 - **60 minutos exactos por sesión**: 6 de calentamiento + trabajo + 7 de estiramiento. El trabajo debe terminar antes del minuto ~48 según el modelo de tiempo (`blocksOf`). El gimnasio está lleno: superseries en la misma estación o en dos cercanas, y plan B por ejercicio.
-- No cambies las claves de `localStorage` (`ed13:*` en Edrei, `zuly2:*` en Zuly) sin querer: se perdería lo que llevan marcado. En Edrei: `ed13:d:<fecha>` (registro del día, con `att` y `plan` desde v14) y `ed13:w:<lunes>` (plan de la semana).
+- No cambies las claves de `localStorage` (`ed13:*` en Edrei, `zuly2:*` en Zuly) sin querer: se perdería lo que llevan marcado. En Edrei: `ed13:d:<fecha>` (registro del día, con `att` y `plan` desde v14) y `ed13:w:<lunes>` (plan de la semana). Las fechas son de America/Monterrey (`todayStr()`), no del reloj local.
 
 ## Estructura
 
