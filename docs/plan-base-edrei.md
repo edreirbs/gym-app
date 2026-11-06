@@ -123,7 +123,8 @@ Edrei no siempre puede ir los 5 días. Las sesiones de la rutina v13.1 se llaman
 - En un día juntado cada superserie conserva su papel (básico pesado, compuesto, analítico) y en cada lugar queda la opción con más valor por minuto según el volumen semanal de cada músculo, con rendimientos decrecientes; prioridad estética pesa 1.0, pecho y pierna 0.8, core y accesorios 0.4 a 0.5.
 - Reglas duras al juntar: trabajo antes del minuto 48, máximo 6 ejercicios, un remo por día, sin repetir ejercicio, sin sentadilla y peso muerto el mismo día, superseries completas, sentadilla siempre. Básicos RIR 2 primero.
 - Nunca dos ejercicios del mismo patrón el mismo día (por ejemplo, aperturas posteriores de pie y sentado), máximo 11 series por músculo por sesión, y sin peso muerto pegado al día de pierna.
-- Lo hecho queda congelado y el plan no cambia mientras siga el plan. Cada lunes empieza en Día 1.
+- Lo hecho queda congelado y el plan no cambia mientras siga el plan.
+- El día de hoy se calcula en hora de Monterrey. Cualquier día marcado se puede regresar a "sin marcar" con "Restablecer día" (spec 003). Cada lunes empieza en Día 1.
 - Detalle y evidencia: `specs/001-semana-adaptativa/spec.md` y `specs/002-reacomodo-por-tipo/spec.md`.
 
 ## Dieta

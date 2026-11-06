@@ -176,6 +176,8 @@ button.set{font-family:var(--mono);color:var(--ink);cursor:pointer;min-height:40
 .wk:focus-visible,.dact:focus-visible{outline:3px solid var(--plate-text);outline-offset:2px}
 .wkq{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;font-size:.86rem}
 .wkq .row{gap:6px}
+.wkhead{font-size:.8rem;font-weight:600;color:var(--ink)}
+.wkhead span{font-weight:400;color:var(--muted)}
 .wkq .btn{min-height:38px}
 .wnote{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
 .wnote b{color:var(--ink)}
@@ -1245,7 +1247,10 @@ const noon=()=>{const d=new Date();d.setHours(12,0,0,0);return d;};
 const parseD=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d,12);};
 const dowOf=s=>(parseD(s).getDay()+6)%7;
 const fmtD=s=>`${DOWL[dowOf(s)]} ${parseD(s).getDate()} ${MES[parseD(s).getMonth()]}`;
-function weekDates(){const d=noon();d.setDate(d.getDate()-((d.getDay()+6)%7));return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return ymd(x);});}
+// "Hoy" siempre en hora de Monterrey (spec 003), sin importar la zona del teléfono.
+const TZ="America/Monterrey";
+function todayStr(){try{return new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());}catch(e){return ymd(noon());}}
+function weekDates(){const d=parseD(todayStr());d.setDate(d.getDate()-((d.getDay()+6)%7));return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return ymd(x);});}
 const recOf=date=>LS.get("d:"+date,null);
 const saveRec=(date,r)=>LS.set("d:"+date,r);
 try{const lim=new Date();lim.setDate(lim.getDate()-21);const cut=ymd(lim);for(let j=localStorage.length-1;j>=0;j--){const k=localStorage.key(j);if(k&&(k.startsWith("ed13:d:")||k.startsWith("ed13:w:"))&&k.slice(7)<cut) localStorage.removeItem(k);}}catch(e){}
@@ -1282,7 +1287,7 @@ function sessionOf(refs,W){
 }
 let WEEK=null, SEL=null;
 function buildWeek(){
-  const today=ymd(noon()), dates=weekDates(), mon=dates[0], st={};
+  const today=todayStr(), dates=weekDates(), mon=dates[0], st={};
   dates.forEach(d=>st[d]=statusOf(d,today));
   const consumed=new Set(), vol={}, fuiRefs={};
   dates.forEach(d=>{if(st[d]!=="fui") return; const r=recOf(d), refs=r.plan||legacyRefs(dowOf(d)); fuiRefs[d]=refs;
@@ -1336,6 +1341,12 @@ function setAtt(date,val){
     toast(`${fmtD(date)}: no ${date<WEEK.today?"fuiste":"vas"}. ${txt}`,()=>{if(prev) saveRec(date,prev); else LS.del("d:"+date); refresh(date);});
   }
 }
+// Restablecer: borra todo lo del día y vuelve a su estado automático (spec 003)
+function resetDay(date){
+  const prev=recOf(date); if(!prev) return;
+  LS.del("d:"+date); refresh(date);
+  toast(`${fmtD(date)}: restablecido`,()=>{saveRec(date,prev);refresh(date);});
+}
 function swapToday(date){
   const W=WEEK.W, t=WEEK.today, a=W.proj[t]||[], b=W.proj[date]||[];
   W.proj[t]=b; W.proj[date]=a; LS.set("w:"+WEEK.mon,W); refresh(t);
@@ -1375,13 +1386,16 @@ function paintWeek(){
   else if(s==="open"){q=dayN[SEL]?`${nm} toca Día ${dayN[SEL]}: ${WEEK.days.find(x=>x.date===SEL).D.s}.`:`${nm}: libre, ya no queda sesión para este día.`;btns=`<button class="btn" data-att="no" data-date="${SEL}">${isT?"Hoy no puedo ir":"No podré ir"}</button>`;}
   else {q=`${nm}: descanso.`;}
   const left=WEEK.days.filter(x=>x.kind==="plan").length, out=W.dropped.map(id=>PAIR_BY[id]).flatMap(p=>p.refs).map(([a,b])=>DAYS[a].ex[b][0]);
-  const why=(W.merges||[]).map(m=>m.keep!=null?`<b>${m.ses.map(x=>DAYS[x].s).join(" o ")}: queda ${DAYS[m.keep].s}</b> (las dos no caben en 60 min sin repetir ejercicios; queda la que más te aporta esta semana)`:`<b>${m.ses.map(x=>DAYS[x].s).join(" + ")} = ${m.title}</b>`).join("; ");
-  const note=W.merged?`<div class="wnote"><b>Semana reacomodada.</b> Para que te alcancen los días que quedan: ${why}. Lo demás queda igual.
+  const why=(W.merges||[]).map(m=>m.keep!=null?`<b>${m.ses.map(x=>DAYS[x].s).join(" o ")}: queda ${DAYS[m.keep].s}</b>`:`<b>${m.ses.map(x=>DAYS[x].s).join(" + ")} = ${m.title}</b>`).join("; ");
+  const note=W.merged?`<div class="wnote"><b>Semana reacomodada.</b> Para que te alcancen los días que quedan: ${why}.${(W.merges||[]).some(m=>m.keep!=null)?" Dos sesiones del mismo tipo no caben juntas en 60 min sin repetir ejercicios, así que queda la que más te aporta esta semana.":""} Lo demás queda igual.
     <details><summary>Cómo se reacomoda</summary><p>Tu semana sigue siendo empuje, jale y pierna. Si te alcanzan los días, solo se recorre: haces la siguiente sesión. Si no, se junta lo mínimo, en este orden:</p>
     <ol class="steps"><li><b>Te falta 1 día:</b> Jale A + Jale B = un día de Jale (tu plan dice que si pierdes una, sea Jale B).</li><li><b>Te faltan 2:</b> también Empuje A + Empuje B = un día de Empuje.</li><li><b>Te faltan 3:</b> Empuje + Jale = Torso. La pierna se queda en su día.</li><li><b>Solo queda 1 día:</b> Cuerpo completo: sentadilla y un básico de torso.</li></ol>
     <p>Al juntar dos sesiones, cada superserie conserva su papel (1 básico pesado, 2 compuesto, 3 analítico) y en cada lugar queda la opción que más aporta a tu semana, contando las series que ya llevas de cada músculo; hombro, espalda y brazos pesan más. Siempre: 60 min, un remo por día, sin sentadilla y peso muerto juntos, nada de peso muerto pegado al día de pierna, y nunca dos ejercicios del mismo tipo el mismo día (por ejemplo, dos aperturas posteriores o dos curls con barra): dan un estímulo repetido que casi no suma (Kassiano 2022). Con el mismo volumen, entrenar más o menos veces por semana cambia poco (Schoenfeld 2019), y la pierna se mantiene con menos volumen (Spiering 2021).</p>
     ${out.length?`<p><b>Salió esta semana:</b> ${out.join(", ")}.</p>`:""}</details></div>`:"";
-  document.getElementById("week").innerHTML=`<div class="wkrow" role="group" aria-label="Tu semana">${chips}</div><div class="wkq"><span>${q}</span><span class="row">${btns}</span></div>${note}`;
+  if(recOf(SEL)) btns+=`<button class="btn" data-reset="${SEL}" aria-label="Restablecer ${fmtD(SEL)}: borra la marca y las series de ese día">↺ Restablecer día</button>`;
+  const t=parseD(WEEK.today), d0=parseD(WEEK.dates[0]), d6=parseD(WEEK.dates[6]);
+  const head=`<div class="wkhead">Semana del ${d0.getDate()}${d0.getMonth()!==d6.getMonth()?" "+MES[d0.getMonth()]:""} al ${d6.getDate()} ${MES[d6.getMonth()]} · hoy ${DOWL[dowOf(WEEK.today)]} ${t.getDate()} <span>(hora de Monterrey)</span></div>`;
+  document.getElementById("week").innerHTML=head+`<div class="wkrow" role="group" aria-label="Tu semana">${chips}</div><div class="wkq"><span>${q}</span><span class="row">${btns}</span></div>${note}`;
 }
 function render(i){
   current=i;
@@ -1504,6 +1518,7 @@ document.addEventListener("click",ev=>{
   const tb=t.closest("[data-tab]"); if(tb){stopRest();render(+tb.dataset.tab);window.scrollTo({top:0});return;}
   const wd=t.closest("[data-wd]"); if(wd){SEL=wd.dataset.wd;paintWeek();const i=WEEK.days.findIndex(x=>x.date===SEL);if(i>=0&&i!==current) render(i);return;}
   const at=t.closest("[data-att]"); if(at){setAtt(at.dataset.date,at.dataset.att==="open"?null:at.dataset.att);return;}
+  const rs=t.closest("[data-reset]"); if(rs){resetDay(rs.dataset.reset);return;}
   const sw=t.closest("[data-swap]"); if(sw){swapToday(sw.dataset.swap);return;}
   const go=t.closest("[data-go]"); if(go){const c=document.getElementById("ex-"+go.dataset.go); c&&c.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});return;}
   const b=t.closest("[data-rest]"); if(!b) return;
@@ -1513,7 +1528,9 @@ document.addEventListener("click",ev=>{
 buildWeek(); current=startIndex(); paintTabs(); paintWeek();
 if(WEEK.days.length) render(current); else refresh();
 // si la app queda abierta y cambia el día (medianoche), se vuelve a armar la semana
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&WEEK.today!==ymd(noon())){SEL=null;refresh();}});
+const dayChanged=()=>{if(WEEK&&WEEK.today!==todayStr()){SEL=null;refresh();}};
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible") dayChanged();});
+setInterval(dayChanged,60000); // si la app se queda abierta y pasa la medianoche en Monterrey
 requestAnimationFrame(frame);
 if(matchMedia("(min-width:700px)").matches) document.getElementById("howto").open=true;
 document.getElementById("spd").onclick=e=>{speed=speed===1?.5:1;e.currentTarget.textContent=speed===1?"Velocidad: normal":"Velocidad: lenta (½)";e.currentTarget.setAttribute("aria-pressed",speed!==1);};
