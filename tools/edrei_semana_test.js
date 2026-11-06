@@ -15,6 +15,8 @@ const fails=[]; let n=0;
 const fail=m=>{fails.push(m);console.log("FALLA",m);};
 const plan=(consumed,vol,slots)=>Semana.plan({pairs,consumed,doneVol:vol,slots,MUS:ctx.MUS});
 
+// Rutina base: cada sesión original cumple las reglas del día (sin patrón repetido, tope por músculo)
+ctx.DAYS.forEach((D,s)=>{const c=Semana.check(pairs.filter(p=>p.s===s),ctx.MUS);if(c.length) fail(`base ${D.s}: ${c.join(", ")}`);});
 // A1: semana completa = base
 const r0=plan(new Set(),{},5);
 if(r0.merged||r0.days.map(g=>g.join()).join("|")!==ctx.DAYS.map((D,s)=>pairs.filter(p=>p.s===s).map(p=>p.id).join()).join("|")) fail("A1: con 5 días el plan no es la base");
@@ -25,7 +27,7 @@ for(let pat=0;pat<32;pat++){
   for(let d=0;d<5;d++){
     const slots=5-d, r=plan(consumed,vol,slots);
     // A2: reglas en cada día planeado
-    r.days.forEach(g=>{n++;const c=Semana.check(g.map(i=>byId[i]));if(c.length) fail(`patrón ${pat} día ${d}: ${c.join(", ")} en ${g.map(nm).join(" | ")}`);});
+    r.days.forEach(g=>{n++;const c=Semana.check(g.map(i=>byId[i]),ctx.MUS);if(c.length) fail(`patrón ${pat} día ${d}: ${c.join(", ")} en ${g.map(nm).join(" | ")}`);});
     if(!consumed.has(SQ)&&!r.days.flat().includes(SQ)) fail(`patrón ${pat} día ${d}: la sentadilla salió`);
     if(r.days.length>slots) fail(`patrón ${pat} día ${d}: más días que disponibles`);
     // A3: si ayer fui e hice lo planeado, el resto del plan no cambia
