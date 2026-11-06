@@ -176,6 +176,10 @@ button.set{font-family:var(--mono);color:var(--ink);cursor:pointer;min-height:40
 .wk:focus-visible,.dact:focus-visible{outline:3px solid var(--plate-text);outline-offset:2px}
 .wkq{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;font-size:.86rem}
 .wkq .row{gap:6px}
+.vsw{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.vsw button{font:inherit;font-size:.84rem;font-weight:600;border:0;border-radius:8px;padding:6px 8px;min-height:34px;background:transparent;color:var(--muted);cursor:pointer}
+.vsw button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.vsw button:focus-visible{outline:3px solid var(--plate-text);outline-offset:1px}
 .wkhead{font-size:.8rem;font-weight:600;color:var(--ink)}
 .wkhead span{font-weight:400;color:var(--muted)}
 .wkq .btn{min-height:38px}
@@ -210,7 +214,7 @@ button.set:disabled{cursor:default;opacity:.7}
 
   <section class="week" id="week" aria-label="Asistencia de la semana"></section>
 
-  <div class="stick"><nav class="tabs" role="tablist" id="tabs"></nav><div class="prog" id="prog" aria-live="polite"></div></div>
+  <div class="stick"><div class="vsw" role="group" aria-label="Qué ver"><button type="button" data-view="semana" aria-pressed="true">Mi semana</button><button type="button" data-view="todas" aria-pressed="false">Las 5 rutinas</button></div><nav class="tabs" role="tablist" id="tabs"></nav><div class="prog" id="prog" aria-live="polite"></div></div>
 
   <details class="howto" id="howto"><summary>Cómo leer esta página</summary><div class="howbody">
   <div class="legend" aria-label="Cómo registrar tu sesión">
@@ -218,6 +222,7 @@ button.set:disabled{cursor:default;opacity:.7}
     <span><b>Toca cada serie</b> (S1, S2…) al terminarla. En la serie de B arranca solo el descanso, arriba ves la cuenta.</span>
     <span><b>✓ Ya lo hice</b> apaga el ejercicio de hoy (también se apaga solo al marcar todas sus series). <b>Reactivar</b> lo devuelve.</span>
     <span><b>Tu semana:</b> las sesiones son Día 1 a Día 5 y vas haciendo la siguiente. Arriba marcas si fuiste o no; si faltas, lo que queda se reacomoda en los días que te quedan. Cada lunes empieza otra vez en Día 1.</span>
+    <span><b>Las 5 rutinas:</b> tus Día 1 a Día 5 originales, siempre a la vista. Puedes hacer la que quieras: toca una serie o <b>Hacerla hoy</b> y queda como tu sesión de hoy.</span>
   </div>
   <div class="legend" aria-label="Cómo leer la intensidad">
     <span><span class="pill p-rir2">RIR 2</span> &nbsp;Termina con 2 reps que aún podrías hacer. Básicos con barra: nunca al fallo entrenando solo.</span>
@@ -1310,14 +1315,21 @@ function buildWeek(){
     else if(st[d]==="open"&&W.proj[d]&&W.proj[d].length) days.push({date:d,kind:"plan",refs:refsOf(W.proj[d])});
   });
   days.forEach((x,i)=>{x.n=i+1;x.today=x.date===today;x.D=sessionOf(x.refs,W);});
-  WEEK={today,dates,st,days,W,mon,pending};
+  const base=DAYS.map((D,s)=>{const refs=D.ex.map((_,e)=>[s,e]);return {kind:"base",s,n:s+1,refs,D:sessionOf(refs,W)};});
+  WEEK={today,dates,st,days,W,mon,pending,base};
   return WEEK;
 }
-const cur=()=>WEEK.days[current];
-const canLog=i=>{const x=WEEK.days[i];return x.kind==="fui"||x.today;};
-function stOf(i){const r=recOf(WEEK.days[i].date)||{};return {done:r.done||[],sets:r.sets||{}};}
+// Vista: "semana" (el plan con calendario) o "todas" (las 5 rutinas originales, siempre visibles). Spec 004.
+let VIEW="semana";
+const LIST=()=>VIEW==="todas"?WEEK.base:WEEK.days;
+const sameRefs=(a,b)=>!!a&&!!b&&JSON.stringify(a)===JSON.stringify(b);
+const cur=()=>LIST()[current];
+// Se registra directo en hoy y en días ya hechos; en cualquier otra sesión, la primera serie la vuelve la de hoy (adoptToday)
+const canLog=i=>{const x=LIST()[i];return x.kind==="fui"||x.today;};
+function stOf(i){const x=LIST()[i]; if(x.kind==="base"){const r=recOf(WEEK.today); return r&&sameRefs(r.plan,x.refs)?{done:r.done||[],sets:r.sets||{}}:{done:[],sets:{}};}
+  const r=recOf(x.date)||{};return {done:r.done||[],sets:r.sets||{}};}
 function saveSt(i,st){ // al registrar, la sesión de ese día queda congelada (R3)
-  const x=WEEK.days[i], r=recOf(x.date)||{};
+  const x=LIST()[i], r=recOf(x.date)||{};
   r.done=st.done; r.sets=st.sets; if(!r.plan) r.plan=x.refs; if(r.att!=="no") r.att="fui";
   saveRec(x.date,r);
   if(x.kind!=="fui"){buildWeek();paintTabs();paintWeek();}
@@ -1347,14 +1359,32 @@ function resetDay(date){
   LS.del("d:"+date); refresh(date);
   toast(`${fmtD(date)}: restablecido`,()=>{saveRec(date,prev);refresh(date);});
 }
+// Hacer hoy cualquier sesión (otra del plan o una de las 5 originales). Si hoy ya tenía series de otra, pregunta.
+function adoptToday(i,then){
+  const x=LIST()[i], t=WEEK.today, prev=recOf(t);
+  if(!(prev&&sameRefs(prev.plan,x.refs))){
+    if(prev&&logged(prev)&&!confirm(`Hoy ya registraste series de otra sesión. ¿Cambiar la sesión de hoy a ${x.D.s}? Las series de hoy se borran.`)) return;
+    saveRec(t,{att:"fui",plan:x.refs,done:[],sets:{}});
+    toast(`Hoy haces: ${x.D.s}`,()=>{if(prev) saveRec(t,prev); else LS.del("d:"+t); refresh(t);});
+  }
+  VIEW="semana"; paintView(); refresh(t);
+  then&&then();
+}
+function paintView(){document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.view===VIEW)));}
+function setView(v){
+  VIEW=v; paintView(); paintTabs();
+  if(v==="todas"){const r=recOf(WEEK.today); const k=r&&r.plan?WEEK.base.findIndex(x=>sameRefs(x.refs,r.plan)):-1; render(k>=0?k:(cur()&&cur().D?cur().D.n-1:0));}
+  else render(startIndex());
+}
 function swapToday(date){
   const W=WEEK.W, t=WEEK.today, a=W.proj[t]||[], b=W.proj[date]||[];
   W.proj[t]=b; W.proj[date]=a; LS.set("w:"+WEEK.mon,W); refresh(t);
   toast("Listo: esta sesión es la de hoy",()=>{W.proj[t]=a;W.proj[date]=b;LS.set("w:"+WEEK.mon,W);refresh(t);});
 }
 function refresh(focusDate){
-  const keep=focusDate||(WEEK.days[current]&&WEEK.days[current].date);
+  const keep=focusDate||(VIEW==="semana"&&WEEK.days[current]&&WEEK.days[current].date);
   buildWeek(); paintTabs(); SEL=focusDate||SEL; paintWeek();
+  if(VIEW==="todas"){render(Math.min(current,WEEK.base.length-1));return;}
   if(!WEEK.days.length){document.getElementById("day").innerHTML=`<div class="block"><h3>Semana completa</h3><p class="note" style="margin:0">No quedan sesiones para esta semana. El lunes empieza otra vez en Día 1.</p></div>`;paintProg();return;}
   let i=WEEK.days.findIndex(x=>x.date===keep); if(i<0) i=startIndex();
   render(i);
@@ -1367,8 +1397,9 @@ let current=0, timer=null, toastT=null;
 const $=s=>document.querySelector(s);
 function tagsOf(D){const t={};blocksOf(D).forEach((bk,j)=>bk.idx.forEach((n,p)=>t[n]=`${j+1}${bk.idx.length>1?"AB"[p]:""}`));return t;}
 function paintTabs(){
-  const tabs=document.getElementById("tabs"); tabs.style.setProperty("--n",Math.max(WEEK.days.length,1));
-  tabs.innerHTML=WEEK.days.map((x,i)=>{const [pc]=PLATES[x.D.d];return `<button class="tab${x.today?" today":""}" type="button" role="tab" id="tab-${i}" data-tab="${i}" aria-selected="${i===current}"><span class="dot" style="background:${pc}"></span>Día ${x.n}<small>${x.D.s}</small><span class="tck" aria-hidden="true">✓</span></button>`;}).join("");
+  const tabs=document.getElementById("tabs"), L=LIST(); tabs.style.setProperty("--n",Math.max(L.length,1));
+  if(current>=L.length) current=0;
+  tabs.innerHTML=L.map((x,i)=>{const [pc]=PLATES[x.D.d];return `<button class="tab${x.today?" today":""}" type="button" role="tab" id="tab-${i}" data-tab="${i}" aria-selected="${i===current}"><span class="dot" style="background:${pc}"></span>Día ${x.n}<small>${x.D.s}</small><span class="tck" aria-hidden="true">✓</span></button>`;}).join("");
 }
 // Tira de la semana: aquí le dices a la app si fuiste o no
 function paintWeek(){
@@ -1399,18 +1430,19 @@ function paintWeek(){
 }
 function render(i){
   current=i;
-  const X=WEEK.days[i], D=X.D, [pc,pi,pt]=PLATES[D.d], st=stOf(i), done=new Set(st.done), TG=tagsOf(D), log=canLog(i);
+  const X=LIST()[i], D=X.D, [pc,pi,pt]=PLATES[D.d], st=stOf(i), done=new Set(st.done), TG=tagsOf(D), log=canLog(i);
   document.documentElement.style.setProperty("--plate",pc);
   document.documentElement.style.setProperty("--plate-ink",pi);document.documentElement.style.setProperty("--plate-text",pt);
   document.querySelectorAll(".tab").forEach((t,j)=>t.setAttribute("aria-selected",j===i));
   const series=D.ex.reduce((a,e)=>a+e[1],0), BL=blocksOf(D), w=Math.round(BL[BL.length-1].end-6);
-  const when=X.kind==="fui"?(X.today?`Hoy, ${fmtD(X.date)} · registrado`:`Hecho el ${fmtD(X.date)}`):(X.today?`Hoy, ${fmtD(X.date)}`:`Plan: ${fmtD(X.date)}`);
-  const act=X.kind==="plan"&&X.today?`<button type="button" class="dact" data-att="no" data-date="${X.date}">Hoy no puedo ir</button>`:(X.kind==="plan"&&WEEK.st[WEEK.today]==="open"?`<button type="button" class="dact" data-swap="${X.date}">Hacerla hoy</button>`:"");
+  const isTodayBase=X.kind==="base"&&(()=>{const r=recOf(WEEK.today);return r&&sameRefs(r.plan,X.refs);})();
+  const when=X.kind==="base"?(isTodayBase?"Tu rutina original · es tu sesión de hoy":"Tu rutina original · la puedes hacer el día que quieras"):X.kind==="fui"?(X.today?`Hoy, ${fmtD(X.date)} · registrado`:`Hecho el ${fmtD(X.date)}`):(X.today?`Hoy, ${fmtD(X.date)}`:`Plan: ${fmtD(X.date)}`);
+  const act=X.kind==="base"?(isTodayBase?"":`<button type="button" class="dact" data-adopt="${i}">Hacerla hoy</button>`):X.kind==="plan"&&X.today?`<button type="button" class="dact" data-att="no" data-date="${X.date}">Hoy no puedo ir</button>`:(X.kind==="plan"?(WEEK.st[WEEK.today]==="open"?`<button type="button" class="dact" data-swap="${X.date}">Hacerla hoy</button>`:`<button type="button" class="dact" data-adopt="${i}">Hacerla hoy</button>`):"");
   let h=`<section style="display:flex;flex-direction:column;gap:14px">
   <div class="dayhead"><div><h2>Día ${X.n} · ${D.s}</h2><p class="when">${when}</p><p>${D.f}</p><p style="font-family:var(--mono);font-size:.78rem">${series} series · ${D.ex.length} ejercicios en ${BL.length} superseries</p>${act}</div>
    <div class="timebar"><div class="bar"><span style="width:${6/60*100}%;background:${pi};opacity:.5"></span><span style="width:${w/60*100}%;background:${pi}"></span><span style="width:${(53-6-w)/60*100}%;background:transparent;outline:1px dashed ${pi};outline-offset:-1px"></span><span style="width:${7/60*100}%;background:${pi};opacity:.3"></span></div>
    <div class="lbl"><span>6 calent.</span><span>~${w} trabajo</span><span>${53-6-w} margen + 7 estir.</span></div></div></div>
-  ${log?"":`<p class="note planned">Es el plan de ese día: las series se registran el día que entrenas.${act?" Si quieres hacerla hoy, toca <b>Hacerla hoy</b>.":""}</p>`}
+  ${log||isTodayBase?"":`<p class="note planned">${X.kind==="base"?`Tu Día ${X.n} original, completo.`:`Es el plan del ${fmtD(X.date)}.`} Si la quieres hacer hoy, toca <b>Hacerla hoy</b> o directo una serie: queda como tu sesión de hoy.</p>`}
   <div class="block"><h3>Calentamiento · 6 min</h3><ul>${D.warm.map(x=>`<li>${x}</li>`).join("")}</ul></div>`;
   BL.forEach((bk,j)=>{
     const tg=bk.idx.map(n=>TG[n]), R=Math.max(...bk.idx.map(n=>D.ex[n][1])), rest=D.ex[bk.idx[bk.idx.length-1]][3];
@@ -1420,7 +1452,7 @@ function render(i){
     bk.idx.forEach((n,p)=>{
       const [name,s,reps,rst,int,ss,q,anim,como,evita,siente,alt]=D.ex[n], tag=TG[n], [pc2,pl]=intLabel[int], on=new Set((st.sets[n])||[]);
       const cfg=A[anim];
-      const chips=Array.from({length:s},(_,k)=>{const last=k===s-1&&int==="fallo";return `<button type="button" class="set${last?" f":""}" data-n="${n}" data-k="${k}" aria-pressed="${on.has(k)}"${log?"":" disabled"}>S${k+1} · ${last?reps+" al fallo":reps}</button>`}).join("");
+      const chips=Array.from({length:s},(_,k)=>{const last=k===s-1&&int==="fallo";return `<button type="button" class="set${last?" f":""}" data-n="${n}" data-k="${k}" aria-pressed="${on.has(k)}">S${k+1} · ${last?reps+" al fallo":reps}</button>`}).join("");
       h+=`<article class="card${done.has(n)?" done":""}" id="ex-${n}" data-n="${n}">
        <div class="donerow"><span class="dck" aria-hidden="true">✓</span><span class="dtag">${tag}</span><span class="dname">${name}</span><span class="dtxt">Hecho</span><button type="button" class="undo" data-undo="${n}" aria-label="Reactivar ${name}">Reactivar</button></div>
        <div class="anim">${HAS3D?`<div class="stage3"><canvas width="560" height="560" aria-label="Modelo 3D: ${name}. Desliza a los lados para girar."></canvas></div><div class="ctl"><button type="button" class="mini" data-v="90">Frente</button><button type="button" class="mini" data-v="0">Lado</button><button type="button" class="mini" data-v="-90">Atrás</button><button type="button" class="mini" data-v="top">Arriba</button><button type="button" class="mini hudb" aria-pressed="true">Datos</button><button type="button" class="mini pp" aria-label="Pausar">❚❚</button></div><div class="hud" aria-live="off"></div>`:`<button type="button" class="stage" aria-label="Pausar o reanudar la animación de ${name}" id="st-${i}-${n}"><span class="views">${viewsFor(anim,cfg).map(([y,lab])=>`<span class="view"><svg viewBox="0 -30 200 212" role="img" aria-label="${name}, vista ${lab}"><g data-yaw="${y}"></g></svg><span class="vlab">${lab}</span></span>`).join("")}</span><span class="pz">Pausa</span></button>`}
@@ -1428,7 +1460,7 @@ function render(i){
          <div class="mus">${(MUS[anim]||[]).map(m=>`<span>${MUS_NAME[m]}</span>`).join("")}</div>
          <span class="cap" data-anim="${anim}">${HAS3D?(matchMedia("(pointer:coarse)").matches?"Desliza a los lados para girar · dos dedos: acercar y subir la cámara · doble toque: vista inicial":"Arrastra para girar · rueda para acercar · doble clic: vista inicial"):"Toca para pausar"}</span></div>
        <div class="info">
-        <div class="top"><span class="num">${tag}</span><div class="name">${name}</div>${log?`<button type="button" class="donebtn" data-done="${n}" aria-label="Marcar ${name} como hecho">✓ Ya lo hice</button>`:""}</div>
+        <div class="top"><span class="num">${tag}</span><div class="name">${name}</div><button type="button" class="donebtn" data-done="${n}" aria-label="Marcar ${name} como hecho">✓ Ya lo hice</button></div>
         <div class="rx">${s} × ${reps}<small>series × reps</small></div>
         <div class="sets" role="group" aria-label="Series de ${name}: toca cada una al terminarla">${chips}</div>
         <div class="meta"><span class="pill ${pc2}">${pl}</span><span class="note">${rst>0?`Al terminar el par: descansa ${restTxt(rst)}`:`Sin descanso: pasa a ${TG[bk.idx[p+1]]}`}</span></div>
@@ -1460,16 +1492,16 @@ function render(i){
 }
 // barra de avance del día y palomitas en las pestañas
 function paintProg(){
-  const el=$("#prog"); if(!WEEK.days.length){el.innerHTML=`<span class="pt">Semana completa</span>`;return;}
+  const el=$("#prog"); if(!LIST().length){el.innerHTML=`<span class="pt">Semana completa</span>`;return;}
   const X=cur(), D=X.D, st=stOf(current), done=new Set(st.done), TG=tagsOf(D), c=done.size, all=c===D.ex.length;
   const pills=blocksOf(D).map(bk=>`<span class="ppg">${bk.idx.map(n=>`<button type="button" class="pgp${done.has(n)?" on":""}" data-go="${n}" aria-label="${D.ex[n][0]}${done.has(n)?": hecho":": pendiente"}">${TG[n]}</button>`).join("")}</span>`).join("");
   el.innerHTML=`<span class="pt"></span><span class="pps">${pills}</span>`;
-  el._msg=all?"✓ Día completo":(canLog(current)?`Día ${X.n}: <b>${c} de ${D.ex.length}</b> hechos`:`Día ${X.n} · ${DOW[dowOf(X.date)]} ${parseD(X.date).getDate()}`); paintRest();
+  el._msg=all?"✓ Día completo":(canLog(current)||(X.kind==="base"&&c)?`Día ${X.n}: <b>${c} de ${D.ex.length}</b> hechos`:X.kind==="base"?`Día ${X.n} original · ${D.s}`:`Día ${X.n} · ${DOW[dowOf(X.date)]} ${parseD(X.date).getDate()}`); paintRest();
   el.classList.toggle("all",all);
-  document.querySelectorAll(".tab").forEach((t,j)=>{const x=WEEK.days[j];t.classList.toggle("ok",!!x&&x.kind==="fui"&&stOf(j).done.length===x.D.ex.length);});
+  document.querySelectorAll(".tab").forEach((t,j)=>{const x=LIST()[j];t.classList.toggle("ok",!!x&&x.kind!=="plan"&&stOf(j).done.length===x.D.ex.length);});
 }
 function setDone(n,on){
-  if(!canLog(current)) return;
+  if(!canLog(current)){adoptToday(current,()=>setDone(n,on));return;}
   const st=stOf(current), d=new Set(st.done), was=d.has(n), D=cur().D;
   if(on){d.add(n); st.sets[n]=Array.from({length:D.ex[n][1]},(_,k)=>k);} else d.delete(n);
   st.done=[...d]; saveSt(current,st);
@@ -1479,7 +1511,7 @@ function setDone(n,on){
     if(d.size===D.ex.length){const c=document.getElementById("cool"); c&&setTimeout(()=>c.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"}),350);}}
 }
 function toggleSet(n,k,btn){
-  if(!canLog(current)) return;
+  if(!canLog(current)){adoptToday(current,()=>{const b=document.querySelector(`#ex-${n} .set[data-k="${k}"]`);b&&toggleSet(n,k,b);});return;}
   const st=stOf(current), s=new Set(st.sets[n]||[]), on=!s.has(k), D=cur().D;
   on?s.add(k):s.delete(k); st.sets[n]=[...s].sort(); saveSt(current,st); btn.setAttribute("aria-pressed",String(on));
   const e=D.ex[n];
@@ -1493,7 +1525,7 @@ function toast(msg,undo){
   const b=t.querySelector("button"); b.hidden=!undo; b.onclick=()=>{t.hidden=true; clearTimeout(toastT); undo&&undo();};
   clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;},5000);
 }
-window.enable3D=()=>{try{const c=document.createElement("canvas");if(!(c.getContext("webgl2")||c.getContext("webgl")))return;}catch(e){return;}HAS3D=true;if(WEEK.days.length) render(current);};
+window.enable3D=()=>{try{const c=document.createElement("canvas");if(!(c.getContext("webgl2")||c.getContext("webgl")))return;}catch(e){return;}HAS3D=true;if(LIST().length) render(current);};
 function paintRest(){const el=$("#prog"), pt=el&&el.querySelector(".pt"); if(!pt) return;
   if(timer&&timer.left>0){pt.innerHTML=`<button type="button" class="rstop" data-stop="1" aria-label="Terminar descanso">⏱ Descansa <b>${Math.floor(timer.left/60)}:${p2(timer.left%60)}</b></button>`; el.classList.add("resting");}
   else if(timer&&timer.left<=0){pt.innerHTML="<b>¡Siguiente ronda!</b>"; el.classList.add("resting");}
@@ -1519,6 +1551,8 @@ document.addEventListener("click",ev=>{
   const wd=t.closest("[data-wd]"); if(wd){SEL=wd.dataset.wd;paintWeek();const i=WEEK.days.findIndex(x=>x.date===SEL);if(i>=0&&i!==current) render(i);return;}
   const at=t.closest("[data-att]"); if(at){setAtt(at.dataset.date,at.dataset.att==="open"?null:at.dataset.att);return;}
   const rs=t.closest("[data-reset]"); if(rs){resetDay(rs.dataset.reset);return;}
+  const ad=t.closest("[data-adopt]"); if(ad){adoptToday(+ad.dataset.adopt);window.scrollTo({top:0});return;}
+  const vw=t.closest("[data-view]"); if(vw){stopRest();setView(vw.dataset.view);return;}
   const sw=t.closest("[data-swap]"); if(sw){swapToday(sw.dataset.swap);return;}
   const go=t.closest("[data-go]"); if(go){const c=document.getElementById("ex-"+go.dataset.go); c&&c.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});return;}
   const b=t.closest("[data-rest]"); if(!b) return;

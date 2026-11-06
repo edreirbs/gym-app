@@ -49,7 +49,7 @@ with sync_playwright() as p:
     pg.screenshot(path="out/edrei_m_done.png")
     # pestaña de un día futuro: series deshabilitadas y botón Hacerla hoy
     pg.click("#tab-2"); pg.wait_for_timeout(900)
-    ok(pg.evaluate("[...document.querySelectorAll('.set')].every(b=>b.disabled)"),"día planeado futuro: series deshabilitadas")
+    ok(pg.evaluate("[...document.querySelectorAll('.set')].every(b=>!b.disabled)"),"día planeado futuro: series activas (spec 004)")
     ok(pg.evaluate("!!document.querySelector('[data-swap]')")==False,"hoy ya registrado: no ofrece Hacerla hoy")
     print("     errores",errs[:5]); ok(not errs,"lunes: sin errores de consola"); ctx.close()
 
@@ -132,6 +132,25 @@ with sync_playwright() as p:
     ok(pg.evaluate("WEEK.st['2026-11-04']")=="open" and not pg.evaluate("document.querySelector('.set[aria-pressed=true]')"),"Restablecer borra las series del día")
     ok(ov(pg)==0,"sin desbordamiento con el botón")
     pg.evaluate("window.scrollTo(0,0)"); pg.locator("#week").screenshot(path="out/edrei_m_reset.png")
+    ctx.close()
+
+    # 6. Ver y hacer cualquier rutina (spec 004): martes sin registros, faltó el lunes
+    ctx,pg,errs=page(b,"m",{"width":390,"height":844},"light",DAY["mar"])
+    pg.click('[data-view="todas"]'); pg.wait_for_timeout(900)
+    ok(pg.evaluate("LIST().length")==5 and pg.evaluate("WEEK.base.map(x=>x.D.s)")==["Empuje A","Jale A","Pierna","Empuje B","Jale B"],"Las 5 rutinas: 5 pestañas con las sesiones originales")
+    pg.click("#tab-4"); pg.wait_for_timeout(900)
+    ok(pg.evaluate("live.length")==6 and ov(pg)==0,"Jale B original se ve completo")
+    pg.screenshot(path="out/edrei_m_todas.png")
+    pg.click('#ex-2 .set[data-k="0"]'); pg.wait_for_timeout(900)
+    ok(pg.evaluate("VIEW")=="semana" and pg.evaluate("cur().today") and pg.evaluate("cur().D.s")=="Jale B","tocar una serie de Jale B la vuelve la sesión de hoy")
+    ok(pg.evaluate("stOf(current).sets['2']")==[0],"y registra esa serie")
+    ok(pg.evaluate("JSON.parse(localStorage.getItem('ed13:d:2026-11-03')).plan[0][0]")==4,"el registro de hoy guarda Jale B")
+    # cambiar a otra sesión con series ya registradas pregunta; si acepta, cambia
+    pg.on("dialog",lambda d: d.accept())
+    pg.click('[data-view="todas"]'); pg.wait_for_timeout(700); pg.click("#tab-0"); pg.wait_for_timeout(700)
+    pg.click('[data-adopt="0"]'); pg.wait_for_timeout(900)
+    ok(pg.evaluate("cur().D.s")=="Empuje A" and pg.evaluate("stOf(current).sets")=={},"Hacerla hoy con series de otra: pregunta y cambia")
+    print("     errores",errs[:5]); ok(not errs,"spec 004: sin errores de consola")
     ctx.close()
     b.close()
 print("\n"+("TODO BIEN" if not FAILS else f"{len(FAILS)} FALLAS: "+"; ".join(FAILS)))
