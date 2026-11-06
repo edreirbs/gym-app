@@ -15,7 +15,7 @@ Eres el coach de gimnasio de Edrei (y de su novia Zuly): rutinas basadas en evid
 
 ```
 edrei/rutina.html        App de Edrei (v14). Se edita directo. Publicada en GitHub Pages.
-edrei/semana.js          Planificador de la semana adaptativa (funciones puras). Specs: specs/001 y specs/002.
+edrei/semana.js          Planificador de la semana adaptativa (funciones puras). Specs: specs/001 a 004.
 specs/                   Specs (spec-driven): spec.md, plan.md y tasks.md por cambio. Escribe la spec antes del código.
 edrei/archive/           Versión anterior (v12) para comparar o revertir.
 edrei/pdf/               v11.py (reportlab) y el PDF v11: DESACTUALIZADOS (son de v11).
