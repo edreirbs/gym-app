@@ -11,6 +11,17 @@ const HEAVY_LOW=new Set(["sentadilla","pesoMuerto"]);
 const WARM=6, MAX_END=48, PER_DAY=3;
 const MANDATORY=new Set(["sentadilla"]); // la superserie que empieza con sentadilla nunca se pierde
 const RANK={rir2:0,rir1:1,fallo:2};
+// Patrón de movimiento de cada ejercicio. En un día no se repite patrón: dos ejercicios del mismo patrón dan un
+// estímulo redundante (Kassiano y cols., 2022). Martillo cuenta aparte del curl (braquial y braquiorradial).
+const PATTERN={banca:"pressH",inclDb:"pressIncl",inclBar:"pressIncl",militar:"pressV",pressHombro:"pressV",
+  latDb:"lateral",latPolea:"lateral",postDb:"rearDelt",postDbStand:"rearDelt",postPolea:"rearDelt",
+  curlZ:"curl",curlIncl:"curl",predicador:"curl",martillo:"hammer",overheadDb:"triOver",overhead:"triOver",triPolea:"triPush",
+  remoBarra:"row",remoSentado:"row",jalon:"vertPull",jalonSup:"vertPull",pesoMuerto:"hinge",sentadilla:"squat",
+  prensa:"legPress",hipThrust:"hipExt",femoral:"kneeFlex",aductores:"adduct",talon:"calf",crunch:"crunch",lenador:"chop",granjero:"carry"};
+const patOf=k=>PATTERN[k]||k;
+// Tope por sesión: más de ~11 series fraccionales de un músculo en una sesión ya casi no suma (Remmert y cols., 2025, preprint).
+const MAX_SES_SETS=11;
+let MUS_REF={};
 
 /** Lista de superseries de la semana base. */
 function pairsOf(DAYS,blocksOf){
@@ -29,6 +40,11 @@ function addVol(v,pair,MUS){
   return v;
 }
 const f=x=>Math.log2(1+x);
+function totalGain(v,list,MUS){
+  const add={}; list.forEach(p=>addVol(add,p,MUS)); let g=0;
+  for(const m in add) g+=(W[m]??.5)*(f((v[m]||0)+add[m])-f(v[m]||0));
+  return g;
+}
 function gain(v,pair,MUS){
   const add=addVol({},pair,MUS); let g=0;
   for(const m in add) g+=(W[m]??.5)*(f((v[m]||0)+add[m])-f(v[m]||0));
@@ -37,8 +53,9 @@ function gain(v,pair,MUS){
 
 function okGroup(g){
   const keys=g.flatMap(p=>p.keys);
-  if(new Set(keys).size!==keys.length) return false;
+  if(new Set(keys.map(patOf)).size!==keys.length) return false;
   if(keys.filter(k=>REMO.has(k)).length>1) return false;
+  const v={}; g.forEach(p=>addVol(v,p,MUS_REF)); if(Object.values(v).some(x=>x>MAX_SES_SETS)) return false;
   if(keys.filter(k=>HEAVY_LOW.has(k)).length>1) return false;
   if(WARM+g.reduce((a,p)=>a+p.min,0)>MAX_END) return false;
   return g.length<=PER_DAY;
@@ -91,6 +108,7 @@ function unitTitle(u,pairs){
  * Devuelve {days: [[id...]...], dropped: [id...], merged: bool, merges: [{ses:[s...], title}]}.
  */
 function plan({pairs,consumed,doneVol,slots,MUS}){
+  MUS_REF=MUS||{};
   const pend=pendingSessions(pairs,consumed), ids=pendingIds(pairs,consumed);
   if(!pend.length||slots<=0) return {days:[],dropped:ids,merged:false,merges:[]};
   const famOf=s=>pairs.find(p=>p.s===s).fam;
@@ -107,26 +125,41 @@ function plan({pairs,consumed,doneVol,slots,MUS}){
     join(units[0],units[1],units[0].fam); // no debería pasar con la rutina actual
   }
   const vol=Object.assign({},doneVol), days=[], merges=[];
-  for(const u of units){
-    const cand=pairs.filter(p=>u.ses.includes(p.s));
-    if(u.ses.length===1){days.push(cand.map(p=>p.id));cand.forEach(p=>addVol(vol,p,MUS));continue;}
-    const sel=[]; const take=p=>{sel.push(p);addVol(vol,p,MUS);};
-    for(const opts of slotsOf(u,cand)){ // en cada lugar, de las opciones queda la que más aporta por minuto
-      const next=opts.filter(p=>okGroup(sel.concat(p))).map(p=>({p,g:gain(vol,p,MUS)/p.min}))
-        .sort((a,b)=>b.g-a.g||ordKey(a.p)-ordKey(b.p))[0];
-      if(next) take(next.p);
-    }
+  units.forEach((u,ui)=>{
+    // Nada de peso muerto pegado al día de pierna: no repetir básico pesado de pierna en 48 h (plan base).
+    const nearLegs=[units[ui-1],units[ui+1]].some(x=>x&&x!==u&&x.ses.some(s=>famOf(s)==="legs"));
+    const cand=pairs.filter(p=>u.ses.includes(p.s)&&!(nearLegs&&p.keys.some(k=>k==="pesoMuerto")));
+    if(u.ses.length===1){const all=pairs.filter(p=>p.s===u.ses[0]);days.push(all.map(p=>p.id));all.forEach(p=>addVol(vol,p,MUS));return;}
+    // Se prueban todas las combinaciones (una opción o nada por lugar): gana la que llena más lugares
+    // y, entre esas, la que más aporta a la semana. Todas cumplen las reglas del día.
+    let best=null;
+    const slots=slotsOf(u,cand), rec=(i,sel)=>{
+      if(i===slots.length){
+        if(!sel.length) return;
+        const sc=[sel.length,totalGain(vol,sel,MUS)];
+        if(!best||sc[0]>best.sc[0]||(sc[0]===best.sc[0]&&sc[1]>best.sc[1]+1e-9)) best={sc,sel:sel.slice()};
+        return;
+      }
+      for(const p of slots[i]) if(!sel.includes(p)&&okGroup(sel.concat(p))) rec(i+1,sel.concat(p));
+      rec(i+1,sel);
+    };
+    rec(0,[]);
+    const sel=best?best.sel:[]; sel.forEach(p=>addVol(vol,p,MUS));
     days.push(sel.map(p=>p.id));
-    merges.push({ses:u.ses,title:unitTitle(u,pairs)});
-  }
+    const one=[...new Set(sel.map(p=>p.s))];
+    merges.push({ses:u.ses,title:unitTitle(u,pairs),keep:one.length===1&&sel.length===pairs.filter(p=>p.s===one[0]).length?one[0]:null});
+  });
   const used=new Set(days.flat());
   return {days,dropped:ids.filter(id=>!used.has(id)),merged:merges.length>0,merges};
 }
 
 /** Revisa un día ya armado contra las reglas (para pruebas y para avisar si algo raro pasa). */
-function check(group){
+function check(group,MUS){
   const keys=group.flatMap(p=>p.keys), out=[];
   if(new Set(keys).size!==keys.length) out.push("ejercicio repetido");
+  const pats=keys.map(patOf), dup=pats.filter((x,i)=>pats.indexOf(x)!==i);
+  if(dup.length) out.push("patrón repetido: "+[...new Set(dup)].join(", "));
+  if(MUS){const v={}; group.forEach(p=>addVol(v,p,MUS)); for(const m in v) if(v[m]>MAX_SES_SETS) out.push(`${m}: ${v[m]} series en la sesión`);}
   if(keys.filter(k=>REMO.has(k)).length>1) out.push("más de un remo");
   if(keys.filter(k=>HEAVY_LOW.has(k)).length>1) out.push("sentadilla y peso muerto juntos");
   if(keys.length>6) out.push("más de 6 ejercicios");
@@ -134,6 +167,6 @@ function check(group){
   return out;
 }
 
-const api={pairsOf,plan,check,addVol,pendingIds,W,MAX_END};
+const api={pairsOf,plan,check,addVol,pendingIds,patOf,PATTERN,W,MAX_END};
 if(typeof module!=="undefined"&&module.exports) module.exports=api; else root.Semana=api;
 })(typeof window!=="undefined"?window:globalThis);

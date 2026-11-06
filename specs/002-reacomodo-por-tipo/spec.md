@@ -22,7 +22,14 @@ En la primera versión, si Edrei faltaba, la app repartía todas las superseries
    - Cuerpo completo: 1 = sentadilla, 2 = básico de torso, 3 = analítico (si cabe).
    - En cada lugar gana la opción con más valor por minuto (volumen semanal con rendimientos decrecientes y pesos por prioridad, como en la spec 001). Empate: la sesión más temprana.
 6. Se mantienen las reglas duras: minuto 48, máximo 6 ejercicios, un remo por día, sin sentadilla y peso muerto juntos, sin repetir ejercicio.
-7. La app dice qué se juntó ("Jale A + Jale B = Jale") y explica la escalera en "Cómo se reacomoda".
+7. **Revisión del 6/11 (Edrei vio aperturas posteriores de pie y sentado el mismo día):**
+   - **Un ejercicio por patrón de movimiento por día** (`PATTERN` en `semana.js`: press horizontal, press inclinado, press vertical, lateral, posterior, curl, martillo, tríceps sobre la cabeza, jalón de tríceps, remo, jalón, bisagra, sentadilla, etc.). Dos ejercicios del mismo patrón dan un estímulo redundante; la variación útil es la planeada a lo largo de la semana, no la repetida en la sesión (Kassiano y cols., 2022, JSCR 36(6)).
+   - **Tope de 11 series fraccionales por músculo por sesión**: arriba de eso la hipertrofia casi no sube (Remmert y cols., meta-regresión de volumen por sesión, preprint en SportRxiv; evidencia preliminar).
+   - **Sin peso muerto en un día juntado pegado al de pierna** (no repetir básico pesado de pierna en 48 h, plan base).
+   - La elección ya no es lugar por lugar: se prueban todas las combinaciones válidas y gana la que llena más lugares y más aporta.
+   - Las 5 sesiones originales cumplen estas reglas (se revisa en la prueba).
+8. Resultado con la rutina actual: Jale juntado = Jale A (o peso muerto + jalón + aperturas/martillo si no está junto a pierna); Empuje juntado = Empuje A o Empuje B completo, porque mezclarlos repetiría press vertical, press inclinado o lateral.
+9. La app dice qué se juntó ("Jale A + Jale B = Jale") y explica la escalera en "Cómo se reacomoda".
 
 ## Criterios de aceptación
 
