@@ -9,12 +9,14 @@ Eres el coach de gimnasio de Edrei (y de su novia Zuly): rutinas basadas en evid
 - **Basado en evidencia y honesto**: si algo tiene poca evidencia, se dice (por ejemplo, colores para TDA, "corregir" la curva del cuello).
 - Respeta TODAS las restricciones de `docs/plan-base-edrei.md` (Edrei, 18 reglas) y las reglas de `docs/plan-zuly.md` (Zuly: rodilla, cuello, riesgo, dolor).
 - **60 minutos exactos por sesión**: 6 de calentamiento + trabajo + 7 de estiramiento. El trabajo debe terminar antes del minuto ~48 según el modelo de tiempo (`blocksOf`). El gimnasio está lleno: superseries en la misma estación o en dos cercanas, y plan B por ejercicio.
-- No cambies las claves de `localStorage` (`ed13:*` en Edrei, `zuly2:*` en Zuly) sin querer: se perdería lo que llevan marcado.
+- No cambies las claves de `localStorage` (`ed13:*` en Edrei, `zuly2:*` en Zuly) sin querer: se perdería lo que llevan marcado. En Edrei: `ed13:d:<fecha>` (registro del día, con `att` y `plan` desde v14) y `ed13:w:<lunes>` (plan de la semana).
 
 ## Estructura
 
 ```
-edrei/rutina.html        App de Edrei (v13.1). Fuente única: se edita directo. Publicada como artifact.
+edrei/rutina.html        App de Edrei (v14). Se edita directo. Publicada en GitHub Pages.
+edrei/semana.js          Planificador de la semana adaptativa (funciones puras). Spec: specs/001-semana-adaptativa/.
+specs/                   Specs (spec-driven): spec.md, plan.md y tasks.md por cambio. Escribe la spec antes del código.
 edrei/archive/           Versión anterior (v12) para comparar o revertir.
 edrei/pdf/               v11.py (reportlab) y el PDF v11: DESACTUALIZADOS (son de v11).
 zuly/src/*.js, shell.html Fuentes de la app de Zuly.
@@ -46,12 +48,17 @@ Corre todo desde la raíz del repo. Las capturas quedan en `out/` (ignorado por 
 1. **Poses** (Edrei): escribe un JS que recorra k de 0 a 1 y corre `python3 tools/edrei_eval.py archivo.js`; mira manos ≤ 1 cm del implemento, pies ≤ 1 cm, nada bajo el piso (más de -1 a -2 cm es error) y que ningún `HUD` dé falso. Visual: `python3 tools/edrei_snap.py clave1,clave2 0,72 out/x.png` y abre la imagen.
 2. **Poses** (Zuly): `python3 tools/zuly_test.py check hipThrust,rdl` y `python3 tools/zuly_test.py snap clave out/x.png 0,45`.
 3. **Tiempos**: `blocksOf` de cada día debe terminar antes del minuto ~48.
-4. **Interfaz**: `python3 tools/edrei_ui_test.py` y `python3 tools/zuly_ui_test.py` (móvil 390×844 claro y escritorio oscuro): sin errores de consola y `overflow 0`. Revisa las capturas.
-5. `python3 tools/check_dashes.py` sin hallazgos.
+4. **Semana adaptativa**: `node tools/edrei_semana_test.js` (480 días planeados contra las reglas). Si cambias la rutina (`DAYS`), córrelo.
+5. **Interfaz**: `python3 tools/edrei_ui_test.py` y `python3 tools/zuly_ui_test.py` (móvil 390×844 claro y escritorio oscuro): sin errores de consola y `overflow 0`. Revisa las capturas.
+6. `python3 tools/check_dashes.py` sin hallazgos.
 
 Edrei rechazó antes: GIFs y figuras 2D, un modelo que "parecía mujer", figuras deformes ("monstruos") y poses sin física real. Quiere técnica biomecánicamente correcta y que se vea bien en el celular.
 
 ## Publicar
+
+- **GitHub Pages (principal):** todo push a `main` publica el sitio con `.github/workflows/pages.yml` (portada `index.html`, `edrei/rutina.html`, `edrei/semana.js`, `zuly/zuly.html`). Las pruebas rápidas corren en cada PR (`pruebas.yml`).
+- Edrei autorizó trabajar y fusionar PRs directo a `main`.
+- Artifacts (anterior):
 
 - Edrei: https://claude.ai/artifact/9xhZVPT7q1oaZhBXobVvt3 (publicar `edrei/rutina.html`; ya está compartido con enlace).
 - Zuly: https://claude.ai/artifact/XK9TgM4aTcBuQXYYMYq9su (publicar `zuly/zuly.html`; es privado, Edrei lo comparte desde el menú Compartir de la página).

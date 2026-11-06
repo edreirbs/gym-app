@@ -3,7 +3,7 @@ import pathlib,sys
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 BAD=("\u2014","\u2013")
 hits=[]
-for p in [ROOT/"edrei"/"rutina.html",ROOT/"zuly"/"zuly.html",*ROOT.glob("*.md"),*(ROOT/"docs").glob("*.md"),*(ROOT/"zuly"/"src").glob("*")]:
+for p in [ROOT/"edrei"/"rutina.html",ROOT/"zuly"/"zuly.html",*ROOT.glob("*.md"),*(ROOT/"docs").glob("*.md"),*(ROOT/"zuly"/"src").glob("*"),ROOT/"edrei"/"semana.js",*(ROOT/"specs").rglob("*.md"),ROOT/"index.html"]:
     for i,l in enumerate(p.read_text(errors="ignore").splitlines(),1):
         if any(c in l for c in BAD): hits.append(f"{p.relative_to(ROOT)}:{i}: {l.strip()[:100]}")
 print("\n".join(hits) if hits else "No hay rayas largas ni medias.")

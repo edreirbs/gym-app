@@ -2,6 +2,11 @@
 
 Todo esto se construyó en un chat de Claude (Proyecto GIMNASIO en claude.ai) y se pasa a Claude Code en la nube. Lee también `CLAUDE.md` (reglas y cómo trabajar) y los planes en `docs/`.
 
+## Actualización 6/11/2026 (Claude Code)
+
+- El repo `edreirbs/gym-app` es la fuente. La app se publica en **GitHub Pages** desde `main` (ya no depende del artifact).
+- **Edrei v14: semana adaptativa.** Sesiones Día 1 a Día 5 en vez de lunes a viernes; marca si fue o no y, si falta, lo pendiente se reacomoda en los días que quedan. Spec: `specs/001-semana-adaptativa/`. Código: `edrei/semana.js` + `edrei/rutina.html`.
+
 ## App de Edrei: "Rutina Edrei v13" (v13.1)
 
 - Publicada: https://claude.ai/artifact/9xhZVPT7q1oaZhBXobVvt3 · fuente: `edrei/rutina.html`.

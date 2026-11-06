@@ -1,6 +1,6 @@
 # Plan base de Edrei: recomposición
 
-*Creado el 17 de agosto de 2026. Versión vigente: **v13.1** (5 de noviembre de 2026). Este doc es la memoria del plan: cualquier sesión futura debe leerlo antes de ajustar rutina o dieta.*
+*Creado el 17 de agosto de 2026. Versión vigente: **v14** (6 de noviembre de 2026; rutina de v13.1 con semana adaptativa). Este doc es la memoria del plan: cualquier sesión futura debe leerlo antes de ajustar rutina o dieta.*
 
 ## Datos del atleta
 
@@ -31,7 +31,7 @@ Bajar de 18.9 % a 13-14 % de grasa manteniendo SMM en 49-50 kg, con **énfasis v
 ## Restricciones (verificar TODAS en cada rediseño)
 
 1. Prioridad estética: hombros, espalda y brazos completos.
-2. **5 días, lunes a viernes seguidos.** La regla "3 torso + 1 pierna" ya no es forzosa.
+2. **5 sesiones por semana, Día 1 a Día 5** (desde v14 no van atadas a lunes a viernes: si falta, la semana se reacomoda; ver Semana adaptativa). La regla "3 torso + 1 pierna" ya no es forzosa.
 3. División empuje / jale en los días de torso.
 4. Más ejercicios compuestos.
 5. Equipo: poleas, barra, mancuernas, discos y banco. Nada de peso corporal. Solo 3 máquinas, todas en pierna: prensa, curl femoral, aductores.
@@ -112,7 +112,17 @@ Extra: encogimientos 2×12-15
 - Peso estancado 2 semanas (promedio 7 días) → quitar 150 kcal de los días de descanso.
 - Bajando más de 0.8 kg/semana → sumar 200 kcal a los días de entreno.
 - Cargas cayendo 3 semanas + mal sueño → descarga y dormir 7-8 h. Con series al fallo, vigilar esto de cerca.
-- Si pierde una sesión, que sea Jale B del viernes. Nunca el miércoles de pierna.
+- Si pierde una sesión, que sea Jale B del viernes. Nunca el miércoles de pierna. (Desde v14 la app lo aplica sola: la sentadilla nunca sale.)
+
+## Semana adaptativa (v14, 6/11/2026)
+
+Edrei no siempre puede ir los 5 días. Las sesiones de la rutina v13.1 se llaman Día 1 (Empuje A), Día 2 (Jale A), Día 3 (Pierna), Día 4 (Empuje B) y Día 5 (Jale B), y son una cola: cada vez que va hace la siguiente. En la app marca si fue o no (o que no podrá ir); un día pasado sin registro se supone que no fue.
+
+- Si las sesiones pendientes caben en los días que quedan, se hacen tal cual.
+- Si no caben, la app junta las superseries pendientes que más aportan en los días disponibles (3 por día). Elige por valor por minuto según el volumen semanal de cada músculo, con rendimientos decrecientes; prioridad estética pesa 1.0, pecho y pierna 0.8, core y accesorios 0.4 a 0.5.
+- Reglas duras al juntar: trabajo antes del minuto 48, máximo 6 ejercicios, un remo por día, sin repetir ejercicio, sin sentadilla y peso muerto el mismo día, superseries completas, sentadilla siempre. Básicos RIR 2 primero.
+- Lo hecho queda congelado y el plan no cambia mientras siga el plan. Cada lunes empieza en Día 1.
+- Detalle y evidencia: `specs/001-semana-adaptativa/spec.md`.
 
 ## Dieta
 
@@ -127,4 +137,5 @@ Basada en lo que compra: verdura congelada, carne molida, pechuga en cubos, past
 - v11.1 (22/10/2026): esquema de intensidad RIR/fallo, artifact con animaciones.
 - v12 (22/10/2026): 5 ejercicios en 4 bloques, plan B por ejercicio; maniquí 3D masculino atlético.
 - v13 (5/11/2026): 6 ejercicios en 3 superseries por día; core dentro de la rutina, aductores el miércoles; registro del día en el artifact.
-- **v13.1 (vigente, 5/11/2026):** el Pallof press (martes y viernes) se cambió por leñador en polea alta, de arriba hacia abajo.
+- v13.1 (5/11/2026): el Pallof press (martes y viernes) se cambió por leñador en polea alta, de arriba hacia abajo.
+- **v14 (vigente, 6/11/2026):** misma rutina; sesiones Día 1 a Día 5 con semana adaptativa si falta un día. La app vive en GitHub Pages.
